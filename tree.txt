@@ -1,0 +1,16 @@
+lexemeCurrentNode             lineno    token               valOfNum  parentNodeSymbol              isLeafNode(yes/no)  NodeSymbol
+
+
+----                          ----      ----                ----      program                       No                  program                       
+----                          ----      ----                ----      program                       No                  otherFunctions                
+----                          ----      ----                ----      otherFunctions                No                  function                      
+_computeFunctionValue         6         TK_FUNID            ----      function                      Yes                 ----                          
+----                          ----      ----                ----      function                      No                  input_par                     
+input                         6         TK_INPUT            ----      input_par                     Yes                 ----                          
+parameter                     6         TK_PARAMETER        ----      input_par                     Yes                 ----                          
+list                          6         TK_LIST             ----      input_par                     Yes                 ----                          
+[                             6         TK_SQL              ----      input_par                     Yes                 ----                          
+----                          ----      ----                ----      input_par                     No                  parameter_list                
+----                          ----      ----                ----      parameter_list                No                  dataType                      
+----                          ----      ----                ----      dataType                      No                  primitiveDatatype             
+int                           6         TK_INT              ----      primitiveDatatype             Yes                 ----                          

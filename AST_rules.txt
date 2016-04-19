@@ -1,0 +1,99 @@
+//Group 41
+//Jayanth N. Koushik 2010A7PS021P
+//Naresh Raghuraman 2010A7PS090P
+
+For genearating the abstract syntax tree, we have identified the set of tokens that are useless, as in provide no necessary information in their context. Thus those nodes are removed from the parse tree to generate the abstract syntax tree.
+This can be represented as the following grammar
+Note: We are not using this grammar. We directly generate the AST from the parse tree by removing nodes which do not provide information.
+
+
+program 2 otherFunctions mainFunction
+mainFunction 1 stmts
+otherFunctions 2 function otherFunctions
+otherFunctions 1 eps
+function 4 TK_FUNID input_par output_par stmts
+input_par 1 parameter_list
+output_par 1 parameter_list
+output_par 1 eps
+parameter_list 3 dataType TK_ID remaining_list
+dataType 1 primitiveDatatype
+dataType 1 constructedDatatype
+primitiveDatatype 1 TK_INT
+primitiveDatatype 1 TK_REAL
+constructedDatatype 2 TK_RECORD TK_RECORDID
+remaining_list 1 parameter_list
+remaining_list 1 eps
+stmts 4 typeDefinitions declarations otherStmts returnStmt
+typeDefinitions 2 typeDefinition typeDefinitions
+typeDefinitions 1 eps
+typeDefinition 4 TK_RECORD TK_RECORDID fieldDefinitions TK_ENDRECORD
+fieldDefinitions 3 fieldDefinition fieldDefinition moreFields
+fieldDefinition 3 TK_TYPE primitiveDatatype TK_FIELDID
+moreFields 2 fieldDefinition moreFields
+moreFields 1 eps
+declarations 2 declaration declarations
+declarations 1 eps
+declaration 4 TK_TYPE dataType TK_ID global_or_not
+global_or_not 1 TK_GLOBAL
+global_or_not 1 eps
+otherStmts 2 stmt otherStmts
+otherStmts 1 eps
+stmt 1 assignmentStmt
+stmt 1 iterativeStmt
+stmt 1 conditionalStmt
+stmt 1 ioStmt
+stmt 1 funCallStmt
+assignmentStmt 2 singleOrRecId arithmeticExpression
+singleOrRecId 2 TK_ID singleOrRecIdPrime
+singleOrRecIdPrime 1 TK_FIELDID
+singleOrRecIdPrime 1 eps
+funCallStmt 3 outputParameters TK_FUNID inputParameters
+outputParameters 1 idList
+outputParameters 1 eps
+inputParameters 1 idList
+iterativeStmt 3 booleanExpression stmt otherStmts
+conditionalStmt 5 booleanExpression TK_THEN stmt otherStmts elsePart
+elsePart 3 TK_ELSE stmt otherStmts
+elsePart 1 eps
+ioStmt 2 TK_READ singleOrRecId
+ioStmt 2 TK_WRITE allVar
+allVar 1 var
+allVar 2 TK_RECORDID TK_FIELDID
+arithmeticExpression 2 term expPrime
+expPrime 3 lowPrecedenceOperators term expPrime
+expPrime 1 eps
+term 2 factor termPrime
+termPrime 3 highPrecedenceOperators factor termPrime
+termPrime 1 eps
+factor 1 arithmeticExpression
+factor 1 all
+highPrecedenceOperators 1 TK_MUL
+highPrecedenceOperators 1 TK_DIV
+lowPrecedenceOperators 1 TK_PLUS
+lowPrecedenceOperators 1 TK_MINUS
+all 1 TK_ID
+all 1 TK_NUM
+all 1 TK_RNUM
+all 2 TK_RECORDID temp
+temp 1 eps
+temp 1 TK_FIELD
+booleanExpression 4 booleanExpression logicalOp booleanExpression
+booleanExpression 3 var relationalOp var
+booleanExpression 2 TK_NOT booleanExpression
+var 1 TK_ID
+var 1 TK_NUM
+var 1 TK_RNUM
+logicalOp 1 TK_AND
+logicalOp 1 TK_OR
+relationalOp 1 TK_LT
+relationalOp 1 TK_LE
+relationalOp 1 TK_EQ
+relationalOp 1 TK_GT
+relationalOp 1 TK_GE
+relationalOp 1 TK_NE
+returnStmt 2 TK_RETURN optionalReturn
+optionalReturn 1 idList
+optionalReturn 1 eps
+idList 2 TK_ID more_ids
+more_ids 1 idList
+more_ids 1 eps
