@@ -28,7 +28,7 @@ typedef struct recTable {
 
 void addRec(recHashTable recordTable, char *name, variableTable *fields, int type);
 int findRecType(recHashTable recordTable, char *name);
-varHashTable getRecFields(recHashTable recordTable, char *recName);
+varHashTable getRecFields(recHashTable recordTable, char *name);
 void removeRecTable(recHashTable recordTable);
 
 typedef struct funcTable {
@@ -39,11 +39,13 @@ typedef struct funcTable {
     struct funcTable *next;
 } funcTable;
 
+funcTable* tempFunc;
 void addFunc(funcHashTable functionTable, char *name, variableTable *inputList, variableTable *outputList);
 bool findFunc(funcHashTable functionTable, char *name); // searches for 'functionName'
 varHashTable getFuncInputList(funcHashTable functionTable, char *name);
 varHashTable getFuncOutputList(funcHashTable functionTable, char *name);
 varHashTable getFuncLocalVariables(funcHashTable functionTable, char *name);
+bool setFuncLocalVariables(funcHashTable functionTable, char *name);
 void removeFuncTable(funcHashTable functionTable);
 
 int getKeyVariable(char *name);
