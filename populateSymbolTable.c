@@ -128,7 +128,7 @@ void printTheFunctionsTable(FunctionTable *funcs)
     }
 }
 
-void populateRecordTable(parseTree *t, recHashTable *recordTable)
+bool populateRecordTable(parseTree *t, recHashTable *recordTable)
 {
     if(!isTerm(t->id))
     {
@@ -137,7 +137,7 @@ void populateRecordTable(parseTree *t, recHashTable *recordTable)
 
             if(findRecType(recordTable,t->children[1].token.lexeme) != -1){
                     printf("Line no. %lu : Redeclaration of record with name %s.\n",t->children[0].token.lineNumber,t->children[0].token.lexeme);
-                    return;
+                    return false;
             }
             
             parseTree temp = t->children[2];
@@ -166,7 +166,7 @@ void populateRecordTable(parseTree *t, recHashTable *recordTable)
                 populateRecordTable(&a->children[i], recordTable);
         }
     }
-    
+    return true;
 }
   
 void printTheRecordTable(RecordTable *recs)
@@ -190,51 +190,42 @@ void printTheRecordTable(RecordTable *recs)
     }
 }
 
-IdentifierTable *populateGlobalTable(parseTree *p, IdentifierTable *globals)
+bool populateGlobalTable(parseTree *p, varHashTable *globals,recHashTable *recordTable)
 {
-    if(p->isTerminal == false)
+    if(!isTerm(t->id))
     {
-        if(p->nonTerminal == declaration)
+        if(t->id == declaration)
         {
-            if(p->children[4].children[0].terminal.tokenClass==TK_COLON)
+            if(t->children[3].children[0].id == TK_GLOBAL)
             {
-                char *name;
-                name = (char *)malloc(sizeof(char)*MAX_ID_SIZE);
-                char *nameOfRecord;
-                nameOfRecord = (char *)malloc(sizeof(char)*MAX_ID_SIZE);
                 
                 int type;
-                if(p->children[1].children[0].nonTerminal==primitiveDatatype)
+                if(t->children[1].children[0].id  ==primitiveDatatype)
                 {
-                    type = p->children[1].children[0].children[0].terminal.tokenClass;
-                    strcpy(nameOfRecord,"");
+                    type = p->children[1].children[0].children[0].id - TK_INT;
                 }
                 else
                 {
-                    type = RECORD_DATATYPE;
-                    strcpy(nameOfRecord, p->children[1].children[0].children[1].terminal.lexeme);
+                    type = findRecType(recordTable,p->children[1].children[0].children[1].token.lexeme);
                 }
                     
                 strcpy(name, p->children[3].terminal.lexeme);
-                if(findIdentifier(globals,name)!=0)
+                if(findVariableType(globals,t->children[2].token.lexeme) != -1)
                 {
-                    printf("Line No. %llu : Redeclaration of identifier with name %s.\n",p->children[3].terminal.lineNo,name);
-                    semantic_flag=1;
-                    //exit(EXIT_FAILURE);
-                    return globals;
+                    printf("Line No. %lu : Redeclaration of identifier with name %s.\n",t->children[2].token.lineNumber,t->children[2].token.lexeme);
+                    return false;
                 }
-                globals = addIdentifier(globals, name, type, nameOfRecord);
+		addVariable(globals,t->children[2].token.lexeme,type);
             }
-            
         }
         else
         {
             int i;
-            for(i = 0; i < p->noOfChildren; i++)
-                globals = populateGlobalTable(&p->children[i], globals);
+            for(i = 0; i < t->numChildren; i++)
+                populateGlobalTable(&t->children[i], globals);
         }
     }    
-    return globals;
+    return true;
     
 }
   
@@ -254,7 +245,7 @@ IdentifierTable *populateLocalTable(parseTree *p, IdentifierTable *globals)
                 int type;
                 if(p->children[1].children[0].nonTerminal==primitiveDatatype)
                 {
-                    type = p->children[1].children[0].children[0].terminal.tokenClass;
+                    type = p->children[1].children[0].children[0].id - TK_INT;
                     strcpy(nameOfRecord,"");
                 }
                 else
