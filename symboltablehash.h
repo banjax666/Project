@@ -1,9 +1,9 @@
 #ifndef SYMBOLTABLEHASH_H
 #define SYMBOLTABLEHASH_H
 
-typedef variableTable** varHashTable;
-typedef funcTable** funcHashTable;
-typedef recTable** recHashTable;
+typedef variableTable* varHashTable[VARIABLES_SIZE];
+typedef funcTable* funcHashTable[FUNCTIONS_SIZE];
+typedef recTable* recHashTable[RECORDS_SIZE];
 
 typedef struct variableTable{
     char *name
@@ -26,12 +26,10 @@ typedef struct recTable {
     struct recTable *next;
 } recTable;
 
-
 void addRec(recHashTable recordTable, char *name, variableTable *fields, int type);
 int findRecType(recHashTable recordTable, char *name);
 varHashTable getRecFields(recHashTable recordTable, char *recName);
 void removeRecTable(recHashTable recordTable);
-
 
 typedef struct funcTable {
     char *name;

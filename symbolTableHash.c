@@ -69,3 +69,15 @@ int findVariableType(varHashTable varTable, char *name){
         return -1;
     }
 }
+
+void removeVariableTable(varHashTable varTable){
+    int i;
+    for(i=0;i<RECORDS_SIZE;++i){
+        while(varTable[i] != NULL) {
+           temp = varTable[i];
+           varTable[i] = varTable[i]->next;
+           free(temp->name);
+           free(temp);
+        }
+    }
+}
