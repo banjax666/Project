@@ -82,6 +82,91 @@ void removeVariableTable(varHashTable varTable){
     }
 }
 
+void addRec(recHashTable recordTable, char *name, variableTable *fields, int type){
+
+    key = getKeyRecord(name);
+    recTable *new = (recTable *)malloc(sizeof(recTable));
+    new->name = (char *)malloc(sizeof(char));
+    recTable *temp;
+
+    new->type = type;
+    strcpy(new->name,name);
+    new->recFields = fields;
+    new->next = NULL;
+
+    if(recordTable[key] == NULL){
+        recordTable[key] = new;
+    }else{
+        temp = recordTable[key];
+        while(temp->next != NULL){
+            temp = temp->next;
+        }
+        temp->next = new;
+    }
+}
+
+int findRecType(recHashTable recordTable, char *name){
+
+    key = getKeyRecord(name);
+    recTable *temp;
+
+    if(recordTable[key] == NULL){
+        return -1;
+    }else{
+        temp = recordTable[key];
+        while(temp != NULL){
+            if(!strcmp(temp->name,name)){
+                return temp->type;
+            }
+            temp = temp->next;
+        }
+    }
+
+    return -1;
+}
+
+varHashTable getRecFields(recHashTable recordTable, char *name){
+
+    key = getKeyRecord(name);
+    recTable *temp;
+
+    if(recordTable[key] == NULL){
+        return NULL;
+    }else{
+        temp = recordTable[key];
+        while(temp != NULL){
+            if(!strcmp(temp->name,name)){
+                return temp->recFields;
+            }
+            temp = temp->next;
+        }
+    }
+
+    return NULL;
+}
+
+void removeRecTable(recHashTable recordTable){
+
+    int i=0;
+    recTable *temp,*temp1;
+
+    while(i<MAX_RECORDS){
+        if(recordTable[i] != NULL){
+            temp = recordTable[i];
+
+            while(temp != NULL){
+                temp1 = temp;
+                temp = temp->next;
+                free(temp1->name);
+                removeVariableTable(temp1->recFields);
+                free(temp1);
+            }
+            recordTable[i] = NULL;
+        }
+        i++;
+    }
+}
+
 void addFunc(funcHashTable functionTable, char *name, variableTable *inputList, variableTable *outputList){
     key = getKeyFunction(name);
     funcTable* newNode = (funcTable *)malloc(sizeof(funcTable));
