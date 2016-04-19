@@ -4,6 +4,7 @@
  
 #include "populateSymbolTable.h"
 
+int recordTypeCounter = 1;
 extern int semantic_flag;
 
 FunctionTable *populateFunctionTable(parseTree *p, FunctionTable *funcs) {
@@ -127,55 +128,44 @@ void printTheFunctionsTable(FunctionTable *funcs)
     }
 }
 
-RecordTable *populateRecordTable(parseTree *p, RecordTable *recs)
+void populateRecordTable(parseTree *t, recHashTable *recordTable)
 {
-    if(p->isTerminal == false)
+    if(!isTerm(t->id))
     {
-        if(p->nonTerminal == typeDefinition)
+        if(t->id == typeDefinition)
         {
-            char *recordName;
-            recordName = (char *)malloc(sizeof(char)*MAX_ID_SIZE);
-            IdentifierTable *record_fields = createNewIdentifierTable();
-            
-            if(p->children[1].isTerminal == true)
-            {
-                strcpy(recordName,p->children[1].terminal.lexeme);
-                if(findRecord(recs,recordName)!=0)
-                {
-                    printf("Line no. %llu : Redeclaration of record with name %s.\n",p->children[1].terminal.lineNo,recordName);
-                    //exit(EXIT_FAILURE);
-                    semantic_flag=1;
-                    return recs;
-                }
+
+            if(findRecType(recordTable,t->children[1].token.lexeme) != -1){
+                    printf("Line no. %lu : Redeclaration of record with name %s.\n",t->children[0].token.lineNumber,t->children[0].token.lexeme);
+                    return;
             }
             
-            parseTree temp = p->children[2];
+            parseTree temp = t->children[2];
             int type;
+	    varHashTable fields;
             
-            type = temp.children[0].children[1].children[0].terminal.tokenClass;
-            record_fields = addIdentifier(record_fields, temp.children[0].children[3].terminal.lexeme, type, "");
-            
-            type = temp.children[1].children[1].children[0].terminal.tokenClass;
-            record_fields = addIdentifier(record_fields, temp.children[1].children[3].terminal.lexeme, type, "");
+            type = temp.children[0].children[1].children[0].id - TK_NUM;
+            addVariable(&fields,temp.children[0].children[2].token.lexeme,type);
+            type = temp.children[1].children[1].children[0].id - TK_NUM;
+            addVariable(&fields,temp.children[1].children[2].token.lexeme,type);
             
             temp = temp.children[2];
-            while(temp.children[0].isTerminal!=true && temp.children[0].terminal.tokenClass!=eps)
+            while(!isTerm(temp.children[0].id) && temp.children[0].id != eps)
             {
-                type = temp.children[0].children[1].children[0].terminal.tokenClass;
-                record_fields = addIdentifier(record_fields, temp.children[0].children[3].terminal.lexeme, type, "");
+                type = temp.children[0].children[1].children[0].id - TK_NUM;
+                addVariable(&fields,temp.children[0].children[2].token.lexeme,type);
                 temp = temp.children[1];
             }
-            
-            recs = addRecord(recs, recordName, record_fields);
+	    recordTypeCounter++;
+            addRec(recordTable,t->children[1].token.lexeme,fields,recordTypeCounter)
         }
         else
         {
             int i;
-            for(i = 0; i < p->noOfChildren; i++)
-                recs = populateRecordTable(&p->children[i], recs);
+            for(i = 0; i < a->numChildren; i++)
+                populateRecordTable(&a->children[i], recordTable);
         }
-    }    
-    return recs;
+    }
     
 }
   
