@@ -1,94 +1,93 @@
-/* populateSymbolTables.c
- * Group 41 - Jayanth N. Koushik (2010A7PS021P), Naresh Raghuraman (2010A7PS090P)
- */
- 
 #include "populateSymbolTable.h"
 
-extern int semantic_flag;
+extern bool semantic_flag;
 
-FunctionTable *populateFunctionTable(parseTree *p, FunctionTable *funcs) {
+int childIdToIndex(parseTree *parent, int id){
+    int i;
+    for(i=0;i<parent->numChildren;++i){
+        if(parent->children[i].id==id)
+            return i;
+    }
+    return -1;
+}
+
+void populateFunctionTable(parseTree *t, funcHashTable *functionTable, recHashTable* recordTable){
     
-    if(p->isTerminal == false)
+    if(!isTerm(t->id))
     {
-        if(p->nonTerminal == function)
+        if(t->id == function)
         {
-            char *functionName;
-            functionName = (char *)malloc(MAX_ID_SIZE*sizeof(char));
-            IdentifierTable *input_parameter_list = createNewIdentifierTable();
-            IdentifierTable *output_parameter_list = createNewIdentifierTable();
+            char* name = (char *)malloc(SIZE_MAX_FUNID*sizeof(char));
+            int nameChild;
+            childName=childIdToIndex(t,TK_FUNID);
+            strcpy(name,t->children[nameChild].token.lexeme);
+            varHashTable* inputList = (varHashTable*)malloc(sizeof(varHashTable));
+            varHashTable* outputList = (varHashTable*)malloc(sizeof(varHashTable));
 
-            if(p->children[0].isTerminal == true)
+            if(findFunc(functionTable,name)==true)
             {
-                strcpy(functionName,p->children[0].terminal.lexeme);
-                
-                if(findFunction(funcs,functionName)!=0)
-                {
-                    printf("Line No. %llu : Redeclaration of function with name %s\n",p->children[0].terminal.lineNo,functionName);
-                    semantic_flag=1;
-                    return funcs;
-                    //exit(EXIT_FAILURE);
-                } 
+                printf("Line %lu : Redeclaration of function : %s\n",t->children[childName].token.lineNumber,name);
+                semantic_flag = false;
             }
-            
-            parseTree temp = p->children[1].children[4];
+
+            parseTree parameterListNode = t->children[childToIndex(input_par)].children[childIdToIndex(parameter_list)];
                         
             while(1)
             {
-                int type;
+                int formalParameterType;
                 
-                if(temp.children[0].children[0].nonTerminal==primitiveDatatype)
+                if(parameterListNode.children[childToIndex(dataType)].children[0].id==primitiveDatatype)
                 {
-                    type = temp.children[0].children[0].children[0].terminal.tokenClass;
-                    input_parameter_list = addIdentifier(input_parameter_list, temp.children[1].terminal.lexeme, type, " ");
+                    formalParameterType = parameterListNode.children[childToIndex(dataType)].children[childToIndex(primitiveDatatype)].children[0].id;
+                    addVariable(inputList, parameterListNode.children[childToIndex(TK_ID)].token.lexeme, formalParameterType);
+
                 }    
                 else
                 {
-                    type = RECORD_DATATYPE;
-                    input_parameter_list = addIdentifier(input_parameter_list, temp.children[1].terminal.lexeme, type, temp.children[0].children[0].children[1].terminal.lexeme);
+                    formalParameterType = findRecType(recordTable, parameterListNode.children[childToIndex(dataType)].children[childToIndex(constructedDatatype)].children[childToIndex(TK_RECORDID)].token.lexeme);
+                    addVariable(inputList, parameterListNode.children[childToIndex(TK_ID)].token.lexeme, formalParameterType);
                 }
-                if(temp.children[2].children[0].terminal.tokenClass == eps)
+                if(parameterListNode.children[childToIndex(remaining_list)].children[0].id == eps)
                     break;
-                temp = temp.children[2].children[1];       
+                parameterListNode = parameterListNode.children[childToIndex(remaining_list)].children[childToIndex(parameter_list)];
             }
             
-            temp = p->children[2];
-            if(temp.children[0].isTerminal==true && temp.children[0].terminal.tokenClass == eps)
-                output_parameter_list = NULL;
+            parseTree outputParameterNode = t->children[childToIndex(output_par)];
+            if(outputParameterNode.children[0].id == eps)
+                outputList=NULL;
             else
             {
-                temp = temp.children[4];
+                parameterListNode = t->children[childToIndex(output_par)].children[childIdToIndex(parameter_list)];
                 while(1)
                 {
-                    int type;
-                
-                    if(temp.children[0].children[0].nonTerminal==primitiveDatatype)
+                    if(parameterListNode.children[childToIndex(dataType)].children[0].id==primitiveDatatype)
                     {
-                        type = temp.children[0].children[0].children[0].terminal.tokenClass;
-                        output_parameter_list = addIdentifier(output_parameter_list, temp.children[1].terminal.lexeme, type, " ");
+                        formalParameterType = parameterListNode.children[childToIndex(dataType)].children[childToIndex(primitiveDatatype)].children[0].id;
+                        addVariable(outputList, parameterListNode.children[childToIndex(TK_ID)].token.lexeme, formalParameterType);
+
                     }    
                     else
                     {
-                        type = RECORD_DATATYPE;
-                        output_parameter_list = addIdentifier(output_parameter_list, temp.children[1].terminal.lexeme, type, temp.children[0].children[0].children[1].terminal.lexeme);
+                        formalParameterType = findRecType(recordTable, parameterListNode.children[childToIndex(dataType)].children[childToIndex(constructedDatatype)].children[childToIndex(TK_RECORDID)].token.lexeme);
+                        addVariable(outputList, parameterListNode.children[childToIndex(TK_ID)].token.lexeme, formalParameterType);
                     }
                 
-                    if(temp.children[2].children[0].terminal.tokenClass == eps)
+                    if(parameterListNode.children[childToIndex(remaining_list)].children[0].id == eps)
                         break;
-                    temp = temp.children[2].children[1];       
+                    parameterListNode = parameterListNode.children[childToIndex(remaining_list)].children[childToIndex(parameter_list)];
                 }
             }
-            
-            funcs = addFunction (funcs, functionName, input_parameter_list, output_parameter_list);   
+
+           addFunc(functionTable, name, inputList, outputList);
         }
         else
         {
             int i;
-            for(i = 0; i < p->noOfChildren; i++)
-                funcs = populateFunctionTable(&p->children[i], funcs);
+            for(i = 0; i < t->numChildren; i++)
+                populateFunctionTable(&t->children[i], functionTable);
         }
     }    
-    return funcs;
-}
+ }
 
 void printTheFunctionsTable(FunctionTable *funcs)
 {
@@ -377,13 +376,17 @@ int compareIdentifierTables(IdentifierTable *callOut, IdentifierTable *funcOut)
     return 1;
 }
 
-int semantic(parseTree *p, FunctionTable *funcs, RecordTable *recs, IdentifierTable *globals, char *currFunc)
+int semantic(parseTree *ast, funcHashTable *functionTable, recHashTable *recordTable, varHashTable *globalTable, char *funcPresent)
 {
     if(p->isTerminal==false)
     {
-        int type1,type2;
-        char *lhs;
+        char* nameLHS;
         int i;
+        char *nameOfRecord;
+        char *nameOfRHSRecord, *nameOfLHSRecord;
+        int typeLHS, typeRHS, typeExpPrime,typeTerm, typeFactor,typeTermPrime, typeArithmeticExp, typeVar;
+
+        varHashTable *varTable;
         int temporary;
         IdentifierTable *locals = createNewIdentifierTable();
         char *functionName;
@@ -429,65 +432,58 @@ int semantic(parseTree *p, FunctionTable *funcs, RecordTable *recs, IdentifierTa
             
             case assignmentStmt:
                 //-----------------------------
-                lhs = (char *)malloc(MAX_ID_SIZE*sizeof(char));
-                
-                int lhs_type;
-                if(p->children[0].children[1].children[0].terminal.tokenClass==eps)
+
+
+
+                nameLHS=(char *)malloc(sizeof(char)*MAX_ID_SIZE);
+                strcpy(nameLHS, ast->children[childIdToIndex(ast,singleOrRecId)].children[childIdToIndex(ast,TK_ID)].token.lexeme);
+                if(ast->children[childIdToIndex(ast,singleOrRecId)].children[childIdToIndex(ast,singleOrRecIdPrime)].children[0].id==eps)// if a variable like 'a'
                 {
                     //for the TK_INT and TK_REAL case
-                    lhs = p->children[0].children[0].terminal.lexeme;
-                    
-                    lhs_type = findIdentifier(globals,lhs);
-                    if(lhs_type==0)
+
+                    typeLHS = findVariableType(globalTable,nameLHS);
+                    if(typeLHS ==-1)
                     {
-                        printf("Line no. %llu : Identifier %s undeclared or out-of-scope.\n",p->children[0].children[0].terminal.lineNo,lhs);
-                        semantic_flag=1;
+                        printf("Line %lu : Variable %s is not declared\n",ast->children[childIdToIndex(ast,singleOrRecId)].children[childIdToIndex(ast,TK_ID)].token.lineNumber,nameLHS);
+                        semantic_flag=false;
                         return -2;
                     }
-                    if(lhs_type==RECORD_DATATYPE)
+                    if(typeLHS >= 2)
                     {
-                        char *recordName;
-                        recordName = (char *)malloc(sizeof(char)*MAX_ID_SIZE);
-                        recordName = findIdentifierRecordName(globals, lhs);
-                        lhs_type = findRecord(recs, recordName);
+
+                        nameOfRecord = (char *)malloc(sizeof(char)*MAX_ID_SIZE);
+                        nameOfRecord = getRecordName(recordTable, typeLHS);
                     }
                 }
-                else
+                else //if a field variable like book_instance.page
                 {
                     //for the RECORD_DATATYPE case
-                    lhs = p->children[0].children[0].terminal.lexeme;
+
+
+                    nameOfRecord = (char *)malloc(sizeof(char)*MAX_ID_SIZE);
                     
-                    char *recordName;
-                    recordName = (char *)malloc(sizeof(char)*MAX_ID_SIZE);
-                    
-                    if(findIdentifier(globals, lhs)==RECORD_DATATYPE)
+                    if(findVariableType(globalTable,nameLHS)>=2) //if book_instance's type is a record
                     {
-                        recordName = findIdentifierRecordName(globals, lhs);
-                        if(findRecord(recs,recordName)!=0)
+                        nameOfRecord = getRecordName(recordTable, typeLHS);
+
+
+                        createVarTable(varTable);
+                        varTable = getRecFields(recordTable, nameOfRecord); //book's fields
+                        typeLHS = findVariableType(varTable, ast->children[childIdToIndex(ast,singleOrRecId)].children[childIdToIndex(ast,singleOrRecIdPrime)].children[childIdToIndex(ast,TK_FIELDID)].token.lexeme/*field id*/); //field "page"'s type
+                        if(typeLHS==-1)//didn't find field page in field list
                         {
-                            IdentifierTable *var = createNewIdentifierTable();
-                            var = findRecordDetails(recs, recordName, var);
-                            lhs_type = findIdentifier(var, p->children[0].children[1].children[1].terminal.lexeme);
-                            if(lhs_type==0)
-                            {
-                                //if record type is found, but the variable type of record. is not found
-                                printf("Line no. %llu : Undefined/Required component of identifier %s of record type %s\n",p->children[0].children[0].terminal.lineNo,lhs,recordName);
-                                semantic_flag=1;
-                                return -2;
-                            }
-                        }
-                        else
-                        {
-                            printf("Line no. %llu : Identifier %s undefined or out-of-scope record variable\n",p->children[0].children[1].terminal.lineNo,lhs);
-                            semantic_flag=1;
+                            //if record type is found, but the variable type of record. is not found
+                            printf("Line %lu : Field %s (of record type %s) not declared\n",ast->children[childIdToIndex(ast,singleOrRecId)].children[childIdToIndex(ast,singleOrRecIdPrime)].children[childIdToIndex(ast,TK_FIELDID)].token.lineNumber,ast->children[childIdToIndex(ast,singleOrRecId)].children[childIdToIndex(ast,singleOrRecIdPrime)].children[childIdToIndex(ast,TK_FIELDID)].token.lexeme,nameOfRecord);
+                            semantic_flag=false;
                             return -2;
                         }
-                             
+
+
                     }
-                    else
+                    else //book_instance is either not stored in id table or is not an instance of record type book
                     {
-                        printf("Line no. %llu : Identifier %s undeclared or out-of-scope.\n",p->children[0].children[0].terminal.lineNo,lhs);
-                        semantic_flag=1;
+                        printf("Line %lu : Identifier %s not declared as record identifier\n",ast->children[childIdToIndex(ast,singleOrRecId)].children[childIdToIndex(ast,TK_ID)].token.lineNumber,nameLHS);
+                        semantic_flag=false;
                         return -2;
                     }
                     
@@ -495,140 +491,143 @@ int semantic(parseTree *p, FunctionTable *funcs, RecordTable *recs, IdentifierTa
                 }
                 
                 //rhs of assignment statement
-                int rhs_type = semantic(&p->children[2], funcs, recs, globals, currFunc);
-                if(lhs_type != rhs_type)
+                typeRHS = semantic(&p->children[childIdToIndex(ast,arithmeticExpression)], functionTable, recordTable, globalTable, funcPresent);
+
+                if(typeLHS != typeRHS)
                 {
-                    if(lhs_type>RECORD_DATATYPE)
-                        printf("Line no. %llu : Semantic error type mismatch in assignment to LHS.\n",p->children[1].terminal.lineNo);    
-                    else    
-                        printf("Line no. %llu : Semantic error type mismatch in assignment to %s.\n",p->children[1].terminal.lineNo,idRepr(lhs_type));
-                    semantic_flag=1;
+
+                    if(typeLHS>=2 && typeRHS>=2){
+                        nameOfRHSRecord = (char *)malloc(sizeof(char)*MAX_ID_SIZE);
+                        nameOfRHSRecord = getRecordName(recordTable, typeRHS);
+                        nameOfLHSRecord = (char *)malloc(sizeof(char)*MAX_ID_SIZE);
+                        nameOfLHSRecord = getRecordName(recordTable, typeLHS);
+                        printf("Line %lu : Type Mismatch <LHS-%s of type record:%s and RHS of type record:%s>\n",ast->children[childIdToIndex(ast,singleOrRecId)].children[childIdToIndex(ast,TK_ID)].token.lineNumber, nameLHS,nameOfLHSRecord,nameOfRHSRecord);
+                    }
+                    else if(typeLHS>=2 && typeRHS<2){
+                        nameOfLHSRecord = (char *)malloc(sizeof(char)*MAX_ID_SIZE);
+                        nameOfLHSRecord = getRecordName(recordTable, typeLHS);
+                        printf("Line %lu : Type Mismatch <LHS-%s of type record:%s and RHS of type %s>\n",ast->children[childIdToIndex(ast,singleOrRecId)].children[childIdToIndex(ast,TK_ID)].token.lineNumber, nameLHS,nameOfLHSRecord,idToName(typeIntOrReal(typeRHS)));
+                    }
+                    else if(typeLHS<2 && typeRHS>=2){
+                        nameOfRHSRecord = (char *)malloc(sizeof(char)*MAX_ID_SIZE);
+                        nameOfRHSRecord = getRecordName(recordTable, typeRHS);
+                        printf("Line %lu : Type Mismatch <LHS-%s of type %s and RHS of type record:%s >\n",ast->children[childIdToIndex(ast,singleOrRecId)].children[childIdToIndex(ast,TK_ID)].token.lineNumber, nameLHS,idToName(typeIntOrReal(typeLHS)),nameOfRHSRecord);
+                    }
+                    else
+                        printf("Line %lu : Type Mismatch <LHS-%s of type %s and RHS of type %s >\n",ast->children[childIdToIndex(ast,singleOrRecId)].children[childIdToIndex(ast,TK_ID)].token.lineNumber, nameLHS,idToName(typeIntOrReal(typeLHS)),idToName(typeIntOrReal(typeRHS)));
+                    semantic_flag=false;
                     return -2;
                 }
-                return lhs_type;
+                return typeLHS;
                 //---------------------------------------------
                 
                 
             case arithmeticExpression:
-                type1 = semantic(&p->children[0], funcs, recs, globals, currFunc);
-                type2 = semantic(&p->children[1], funcs, recs, globals, currFunc);
-                if(type1!=type2 && type2!=-1)
+                typeTerm = semantic(&ast->children[childIdToIndex(ast,term)], functionTable, recordTable, globalTable, funcPresent);
+                typeExpPrime = semantic(&ast->children[childIdToIndex(ast,expPrime)], functionTable, recordTable, globalTable, funcPresent);
+                if(typeTerm!=typeExpPrime && typeExpPrime!=-1)
                 {
-                    semantic_flag=1;
+                    semantic_flag=false;
                     return -2;
                 }
-                return type1;
+                return typeTerm;
             
             case expPrime:
-                if(p->noOfChildren==1)
+                if(childIdToIndex(ast,eps)!=-1)
                     return -1;
-                type1 = semantic(&p->children[1], funcs, recs, globals, currFunc);
-                type2 = semantic(&p->children[2], funcs, recs, globals, currFunc);
-                if(type1!=type2 && type2!=-1)
+                typeTerm = semantic(&ast->children[childIdToIndex(ast,term)], functionTable, recordTable, globalTable, funcPresent);
+                typeExpPrime = semantic(&ast->children[childIdToIndex(ast,expPrime)], functionTable, recordTable, globalTable, funcPresent);
+                if(typeTerm!=typeExpPrime && typeExpPrime!=-1)
                 {
-                    semantic_flag=1;
+                    semantic_flag=false;
                     return -2;
                 }
-                return type1;
+                return typeTerm;
+
                 
             case term:
-                type1 = semantic(&p->children[0], funcs, recs, globals, currFunc);
-                type2 = semantic(&p->children[1], funcs, recs, globals, currFunc);
-                if(type1!=type2 && type2!=-1)
+                typeFactor = semantic(&ast->children[childIdToIndex(ast,factor)], functionTable, recordTable, globalTable, funcPresent);
+                typeTermPrime = semantic(&ast->children[childIdToIndex(ast,termPrime)], functionTable, recordTable, globalTable, funcPresent);
+                if(typeFactor!=typeTermPrime && typeTermPrime!=-1)
                 {
-                    semantic_flag=1;
+                    semantic_flag=false;
                     return -2;
                 }
-                return type1;
+                return typeFactor;
                 
             case factor:
-                if(p->noOfChildren==3)
+                if(childIdToIndex(ast,arithmeticExpression)!=-1)
                 {
-                    type1 = semantic(&p->children[1], funcs, recs, globals, currFunc);
-                    return type1;
+                    typeArithmeticExp = semantic(&ast->children[childIdToIndex(ast,arithmeticExpression)], functionTable, recordTable, globalTable, funcPresent);
+                    return typeArithmeticExp;
                 }
                 
-                return semantic(&p->children[0], funcs, recs, globals, currFunc);
+                return semantic(&ast->children[childIdToIndex(ast,all)], functionTable, recordTable, globalTable, funcPresent);
                 
             case all:
-                if((p->children[0].terminal.tokenClass)==TK_NUM)
+                if((ast->children[0].id)==TK_NUM)
                     return TK_INT;
-                if((p->children[0].terminal.tokenClass)==TK_RNUM)
+                if((ast->children[0].id)==TK_RNUM)
                     return TK_REAL;
-                if((p->children[0].terminal.tokenClass)==TK_ID && ((p->noOfChildren==1)||(p->children[1].children[0].terminal.tokenClass==eps) ))
+                if((ast->children[0].id)==TK_ID && (ast->children[childIdToIndex(ast,temp)].children[0].id==eps))
                 {
-                    type1 = findIdentifier(globals,p->children[0].terminal.lexeme);
-                    if(type1==0)
+                    typeVar = findVariableType(globalTable,ast->children[childIdToIndex(ast,TK_ID)].token.lexeme);
+                    if(typeVar==-1)
                     {
-                        printf("Line no. %llu : Identifier %s undeclared or out-of-scope\n",p->children[0].terminal.lineNo, p->children[0].terminal.lexeme);
-                        semantic_flag=1;
+                        printf("Line %lu : Variable %s is not declared\n",ast->children[childIdToIndex(ast,TK_ID)].token.lineNumber, ast->children[childIdToIndex(ast,TK_ID)].token.lineNumber);
+                        semantic_flag=false;
                         return -2;
                     }
-                    else if(type1 == RECORD_DATATYPE)
-                    {
-                        char *recordName;
-                        recordName = (char *)malloc(sizeof(char)*MAX_ID_SIZE);    
-                        recordName = findIdentifierRecordName(globals, p->children[0].terminal.lexeme);
-                        type1 = findRecord(recs,recordName);
-                        if(type1==0)
-                        {
-                            printf("Line no. %llu : Identifier %s undeclared or out-of-scope\n",p->children[0].terminal.lineNo, p->children[0].terminal.lexeme);
-                            semantic_flag=1;
-                            return -2;
-                        }
-                    }
-                    return type1;
+
+                    return typeVar;
                 }
                 
                 else
                 {
                     // the record part
-                    char *recordName;
-                    recordName = (char *)malloc(sizeof(char)*MAX_ID_SIZE);
-                    if(findIdentifier(globals,p->children[0].terminal.lexeme)==RECORD_DATATYPE)
+                    char *nameOfRecord;
+                    nameOfRecord = (char *)malloc(sizeof(char)*MAX_ID_SIZE);
+                    int typeVar = findVariableType(globalTable,ast->children[childIdToIndex(ast,TK_ID)].token.lexeme);
+                    if(typeVar>=2)
                     {
-                        recordName = findIdentifierRecordName(globals, p->children[0].terminal.lexeme);
-                        if(findRecord(recs,recordName)!=0)
+                        nameOfRecord = getRecordName(recordTable,typeVar);
+
+                        if(findRecType(recordTable,nameOfRecord)!=-1)
+
+                        varHashTable varTable;
+                        varTable = getRecFields(recordTable, nameOfRecord);
+                        typeVar = findVariableType(varTable, ast->children[childIdToIndex(ast,temp)].children[childIdToIndex(ast,TK_FIELDID)].token.lexeme);
+                        if(typeVar==-1)
                         {
-                            IdentifierTable *var = createNewIdentifierTable();
-                            var = findRecordDetails(recs, recordName, var);
-                            type1 = findIdentifier(var, p->children[1].children[1].terminal.lexeme);
-                            if(type1==0)
-                            {
-                                //if record type is found, but the variable type of record. is not found
-                                printf("Line no. %llu : Undefined/Required component of identifier %s of record type %s\n",p->children[0].terminal.lineNo,p->children[0].terminal.lexeme,recordName);
-                                semantic_flag=1;
-                                return -2;
-                            }
-                            return type1;
-                        }
-                        else
-                        {
-                            printf("Line no. %llu : Identifier %s undefined or out-of-scope record variable\n",p->children[0].terminal.lineNo,recordName);
-                            semantic_flag=1;
+                            //if record type is found, but the variable type of record. is not found
+                            printf("Line %lu : Field %s (of record type %s) not declared\n",ast->children[childIdToIndex(ast,temp)].children[childIdToIndex(ast,TK_FIELDID)].token.lineNumber,ast->children[childIdToIndex(ast,temp)].children[childIdToIndex(ast,TK_FIELDID)].token.lexeme,nameOfRecord);
+                            semantic_flag=false;
                             return -2;
                         }
+                        return typeVar;
+
+                       
                     }
                     else
                     {
-                        printf("Line no. %llu : Identifier %s undeclared or out-of-scope.\n",p->children[0].terminal.lineNo,p->children[0].terminal.lexeme);
-                        semantic_flag=1;
+                        printf("Line %lu : Identifier %s not declared as record identifier\n",ast->children[childIdToIndex(ast,TK_ID)].token.lineNumber,ast->children[childIdToIndex(ast,TK_ID)].token.lexeme);
+                        semantic_flag=false;
                         return -2;
                     }
                 }
                 break;
                 
             case termPrime:
-                if(p->noOfChildren==1)
+                if(childIdToIndex(ast,eps) !=-1)
                     return -1;
-                type1 = semantic(&p->children[1], funcs, recs, globals, currFunc);
-                type2 = semantic(&p->children[2], funcs, recs, globals, currFunc);
-                if(type1!=type2 && type2!=-1)
+                typeFactor = semantic(&ast->children[childIdToIndex(ast,factor)], functionTable, recordTable, globalTable, funcPresent);
+                typeTermPrime = semantic(&ast->children[childIdToIndex(ast,termPrime)], functionTable, recordTable, globalTable, funcPresent);
+                if(typeFactor!=typeTermPrime && typeTermPrime!=-1)
                 {
-                    semantic_flag=1;
+                    semantic_flag=false;
                     return -2;
                 }
-                return type1; 
+                return typeFactor;
                 
             // assignment statement ends here
             //ioStmt starts here
@@ -923,7 +922,7 @@ int semantic(parseTree *p, FunctionTable *funcs, RecordTable *recs, IdentifierTa
                             }
                             else
                             {
-                                callOut = addIdentifier(callOut, idName, findId, "");
+                                callOut = ad-dIdentifier(callOut, idName, findId, "");
                             }
                             if(tempo.children[1].children[0].terminal.tokenClass!=eps)
                                 tempo = tempo.children[1].children[1];
@@ -946,79 +945,80 @@ int semantic(parseTree *p, FunctionTable *funcs, RecordTable *recs, IdentifierTa
             
             case booleanExpression:
                 
-                if(p->noOfChildren==3)
+                if(childIdToIndex(ast,relationalOp)!=-1)
                 {
-                    int left_t, right_t;
-                    if(p->children[0].children[0].terminal.tokenClass == TK_NUM)
-                        left_t = TK_INT;
-                    else if(p->children[0].children[0].terminal.tokenClass == TK_RNUM)
-                        left_t = TK_REAL;
+                    if(ast->children[childIdToIndex(ast,var)].children[0].id == TK_NUM)
+                        typeLHS = TK_INT;
+                    else if(ast->children[childIdToIndex(ast,var)].children[0].id == TK_RNUM)
+                        typeLHS = TK_REAL;
                     else 
                     {
-                        left_t = findIdentifier(globals, p->children[0].children[0].terminal.lexeme);
-                        if(left_t==0)
+                        typeLHS = findVariableType(globalTable, ast->children[childIdToIndex(ast,var)].children[0].token.lexeme);
+                        if(typeLHS==-1)
                         {
-                            printf("Line No. %llu : Identifier %s undeclared or out-of-scope\n",p->children[0].children[0].terminal.lineNo,p->children[0].children[0].terminal.lexeme);
-                            semantic_flag=1;
+                            printf("Line %lu : Variable %s is not declared\n",ast->children[childIdToIndex(ast,var)].children[childIdToIndex(ast,TK_ID)].token.lineNumber, ast->children[childIdToIndex(var)].children[childIdToIndex(ast,TK_ID)].token.lexeme);
+                            semantic_flag=false;
                             return -2;
                         }
-                        if(left_t==RECORD_DATATYPE)
+                        if(typeLHS>=2)
                         {
-                            printf("Line No. %llu : Identifier %s used in conditional statement must be of type INT or REAL.\n",p->children[0].children[0].terminal.lineNo,p->children[0].children[0].terminal.lexeme);
-                            semantic_flag=1;
+                            printf("Line %lu : Variable %s should be of type INT or REAL in a boolean expression\n",ast->children[childIdToIndex(ast,var)].children[childIdToIndex(ast,TK_ID)].token.lineNumber, ast->children[childIdToIndex(var)].children[childIdToIndex(ast,TK_ID)].token.lexeme);
+                            semantic_flag=false;
                             return -2;
                         }
                     }
                     
-                    if(p->children[2].children[0].terminal.tokenClass == TK_NUM)
-                        right_t = TK_INT;
-                    else if(p->children[2].children[0].terminal.tokenClass == TK_RNUM)
-                        right_t = TK_REAL;
+                    if(ast->children[2].children[0].id == TK_NUM)
+                        typeRHS = TK_INT;
+                    else if(ast->children[2].children[0].id == TK_RNUM)
+                        typeRHS = TK_REAL;
                     else 
                     {
-                        right_t = findIdentifier(globals, p->children[2].children[0].terminal.lexeme);
-                        if(right_t==0)
+                        typeRHS = findVariableType(globalTable, ast->children[2].children[0].token.lexeme);
+                        if(typeRHS==-1)
                         {
-                            printf("Line No. %llu : Identifier %s undeclared or out-of-scope\n",p->children[2].children[0].terminal.lineNo,p->children[2].children[0].terminal.lexeme);
-                            semantic_flag=1;
+                            printf("Line %lu : Variable %s is not declared\n",ast->children[2].children[0].token.lineNumber, ast->children[2].children[0].token.lexeme);
+                            semantic_flag=false;
                             return -2;
                         }
-                        if(right_t==RECORD_DATATYPE)
+                        if(typeRHS>=2)
                         {
-                            printf("Line No. %llu : Identifier %s used in conditional statement must be of type INT or REAL.\n",p->children[2].children[0].terminal.lineNo,p->children[2].children[0].terminal.lexeme);
-                            semantic_flag=1;
+                            printf("Line %lu : Variable %s should be of type INT or REAL in a boolean expression\n",ast->children[2].children[0].token.lineNumber, ast->children[2].children[0].token.lexeme);
+                            semantic_flag=false;
                             return -2;
                         }
                     }
                     
-                    if(left_t != right_t)
+                    if(typeLHS != typeRHS)
                     {
-                        printf("Line no. %llu : IF conditional statement should evaluate to boolean.\n",p->children[1].children[0].terminal.lineNo);
-                        semantic_flag=1;
+                        printf("Line %lu : Type Mismatch between left entities being compared in relational operation: %s and %s \n",ast->children[childIdToIndex(ast,var)].children[childIdToIndex(ast,TK_ID)].token.lineNumber,idToName(typeIntOrReal(typeLHS)),idToName(typeIntOrReal(typeRHS)));
+                        semantic_flag=false;
                         return -2;
                     }
                 }
                 else
                 {
-                    if(p->noOfChildren==7)
+                    if(childIdToIndex(ast,logicalOp)!=-1)
                     {
-                        int d1 = semantic(&p->children[1], funcs, recs, globals, currFunc);
-                        if(d1!=-2)
-                        {
-                            int d2 = semantic(&p->children[5], funcs, recs, globals, currFunc);
-                        }
+                        int boolExpFirst = semantic(&ast->children[0], functionTable, recordTable, globalTable, funcPresent);
+                        int boolExpSecond = semantic(&ast->children[2], functionTable, recordTable, globalTable, funcPresent);
+                        if(boolExpFirst==-2||boolExpSecond==-2)
+                            return -2;
+
                     }
-                    else if(p->noOfChildren==2)
+                    else if(childIdToIndex(ast,TK_NOT)!=-1)
                     {
-                        int d1 = semantic(&p->children[1], funcs, recs, globals, currFunc);    
+                        int booLExp = semantic(&ast->children[1], functionTable, recordTable, globalTable, funcPresent);
+                        if(booLExp==-2)
+                            return -2;
                     }
                 }
                 return 0;           
                         
             default:
-                for(i = 0; i < p->noOfChildren; i++)
+                for(i = 0; i < ast->numChildren; i++)
                 {
-                    temporary = semantic(&p->children[i], funcs, recs, globals, currFunc);
+                    temporary = semantic(&ast->children[i], functionTable, recordTable, globalTable, funcPresent);
                 }
                 return temporary;
                 

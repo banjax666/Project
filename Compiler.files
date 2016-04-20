@@ -1,3 +1,4 @@
+ast.c
 codegen.c
 driver.c
 lexer.c

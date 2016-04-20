@@ -32,7 +32,6 @@ bool used(int tokenType) {
         case TK_OP:
         case TK_CL:
         case TK_RETURN:
-        case eps:
             return false;
             break;
         default:
@@ -50,6 +49,9 @@ void buildAST(parseTree *pTree, parseTree *ast) {
 
     ast->children = (parseTree *)malloc(ast->numChildren * sizeof(parseTree));
     for(parseTreeCounter=0;parseTreeCounter<p->numChildren;++parseTreeCounter) {
+
+        ast->children[astCounter].parentId = ast->id;
+
         if(isTerm(pTree->children[parseTreeCounter].id) && used(pTree->children[parseTreeCounter].id)){
 
             ast->children[astCounter].id = pTree->children[parseTreeCounter].id;

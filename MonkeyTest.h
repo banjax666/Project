@@ -1,23 +1,19 @@
 #ifndef SYMBOLTABLEHASH_H
 #define SYMBOLTABLEHASH_H
 
-typedef struct varHashTable{
-    variableTable* array[VARIABLES_SIZE];
-} varHashTable;
-
-typedef struct funcHashTable{
-    funcTable* array[FUNCTIONS_SIZE];
-} funcHashTable;
-
-typedef struct recHashTable{
-    recTable* array[RECORDS_SIZE];
-} recHashTable;
+#define VARIABLES_SIZE 37
+#define RECORDS_SIZE 37
+#define FUNCTIONS_SIZE 37
 
 typedef struct variableTable{
-    char *name
+    char *name;
     int type;
     struct variableTable *next;
 } variableTable;
+
+typedef struct varHashTable{
+    variableTable* array[VARIABLES_SIZE];
+} varHashTable;
 
 variableTable* tempVar;
 int key;
@@ -25,7 +21,7 @@ int key;
 void addVariable(varHashTable* varTable , char *name, int type);
 int findVariableType(varHashTable* varTable, char *name);//returns -1 if no variable, else variable type
 void removeVariableTable(varHashTable* varTable);
-int typeIntOrReal(int type);
+
 
 typedef struct recTable {
     char *name;
@@ -34,12 +30,13 @@ typedef struct recTable {
     struct recTable *next;
 } recTable;
 
-recTable* tempRec;
+typedef struct recHashTable{
+    recTable* array[RECORDS_SIZE];
+} recHashTable;
 
-void addRec(recHashTable* recordTable, char *name, variableTable *fields, int type);
+void addRec(recHashTable* recordTable, char *name, varHashTable *fields, int type);
 int findRecType(recHashTable* recordTable, char *name);
 varHashTable* getRecFields(recHashTable* recordTable, char *name);
-char* getRecordName(recHashTable* recordTable, int type);
 void removeRecTable(recHashTable* recordTable);
 
 typedef struct funcTable {
@@ -50,18 +47,22 @@ typedef struct funcTable {
     struct funcTable *next;
 } funcTable;
 
+typedef struct funcHashTable{
+    funcTable* array[FUNCTIONS_SIZE];
+} funcHashTable;
+
 funcTable* tempFunc;
 void addFunc(funcHashTable* functionTable, char *name, varHashTable *inputList, varHashTable *outputList);
 bool findFunc(funcHashTable* functionTable, char *name); // searches for 'functionName'
-varHashTable getFuncInputList(funcHashTable* functionTable, char *name);
-varHashTable getFuncOutputList(funcHashTable* functionTable, char *name);
-varHashTable getFuncLocalVariables(funcHashTable* functionTable, char *name);
-bool setFuncLocalVariables(funcHashTable* functionTable, char *name);
+varHashTable *getFuncInputList(funcHashTable* functionTable, char *name);
+varHashTable *getFuncOutputList(funcHashTable* functionTable, char *name);
+varHashTable *getFuncLocalVariables(funcHashTable* functionTable, char *name);
+bool setFuncLocalVariables(funcHashTable* functionTable, char *name, varHashTable* varTable);
 void removeFuncTable(funcHashTable* functionTable);
 
+int getKeyFunction(char *name)
 int getKeyVariable(char *name);
 int getKeyRecord(char *name);
-int getKeyFunction(char *name);
 
 //variableTable* varHashTable[MAX_VARIABLES];
 //recTable* recHashTable[MAX_RECORDS];

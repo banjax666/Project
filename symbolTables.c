@@ -199,7 +199,7 @@ void removeFuncTable(funcTable *functionTable) {
 
         free(temp->name);
         removeVariableTable(temp->inputParameterList);
-        removeVariableTable(temp->outputParameterList);
+        (temp->outputParameterList);
         free(temp);
     }
 }
