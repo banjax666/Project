@@ -1,7 +1,7 @@
 #include "semanticAnalysis.h"
 extern bool semantic_flag;
 
-int semantic(parseTree *ast, funcHashTable *functionTable, recHashTable *recordTable, varHashTable *globalTable, char *funcPresent)
+int semantic(astNode *ast, funcHashTable *functionTable, recHashTable *recordTable, varHashTable *globalTable, char *funcPresent)
 {
     if(!isTerm(ast->id))
     {
@@ -12,28 +12,28 @@ int semantic(parseTree *ast, funcHashTable *functionTable, recHashTable *recordT
         int typeLHS, typeRHS, typeExpPrime,typeTerm, typeFactor,typeTermPrime, typeArithmeticExp, typeVar, boolExpFirst, boolExpSecond, booLExp, k;
 
         varHashTable *varTable;
-        int temporary;
-        IdentifierTable *locals = createNewIdentifierTable();
-        char *functionName;
-        IdentifierTable *input,*output;
+        varHashTable local,*input,*output;
+        createVarTable(&local);
+        tokenInfo tempToken;
+        char* name;
         
-        switch(p->nonTerminal)
+        switch(ast->id)
         {
         case function:
             createVarTable(input);
             createVarTable(output);
 
-            tempToken = p->children[0].token;
-            input = getFuncInputList(funcs,tempToken->lexeme);
-            output = getFuncOutputList(funcs,tempToken->lexeme);
-            populateLocalTable(p,&local,recs);
+            tempToken = ast->children[0].token;
+            input = getFuncInputList(functionTable,tempToken.lexeme);
+            output = getFuncOutputList(functionTable,tempToken.lexeme);
+            populateLocalTable(ast,&local,recordTable);
 
-            addVarHashTable(&local,&globals);
+            addVarHashTable(&local,&globalTable);
             addVarHashTable(&local,&input);
             addVarHashTable(&local,&output);
 
-            for(i = 0; i < p->numChildren; i++){
-                k=semantic(&p->children[i], funcs, recs,&local,tempToken->lexeme);
+            for(i = 0; i < ast->numChildren; i++){
+                k=semantic(&ast->children[i], functionTable, recordTable,&local,tempToken.lexeme);
             }
 
             return k;
@@ -41,11 +41,11 @@ int semantic(parseTree *ast, funcHashTable *functionTable, recHashTable *recordT
         case mainFunction:
             createVarTable(&local);
 
-            addVarHashTable(&local,&globals);
-            populateLocalTable(p,&local,recs);
+            addVarHashTable(&local,&globalTable);
+            populateLocalTable(ast,&local,recordTable);
 
-            for(i = 0; i < p->numChildren; i++){
-                k=semantic(&p->children[i], funcs, recs,&local,"main");
+            for(i = 0; i < ast->numChildren; i++){
+                k=semantic(&ast->children[i], functionTable, recordTable,&local,"main");
             }
 
             return k;
@@ -111,7 +111,7 @@ int semantic(parseTree *ast, funcHashTable *functionTable, recHashTable *recordT
             }
 
             //rhs of assignment statement
-            typeRHS = semantic(&p->children[childIdToIndex(ast,arithmeticExpression)], functionTable, recordTable, globalTable, funcPresent);
+            typeRHS = semantic(&ast->children[childIdToIndex(ast,arithmeticExpression)], functionTable, recordTable, globalTable, funcPresent);
 
             if(typeLHS != typeRHS)
             {
@@ -194,7 +194,7 @@ int semantic(parseTree *ast, funcHashTable *functionTable, recHashTable *recordT
                 typeVar = findVariableType(globalTable,ast->children[childIdToIndex(ast,TK_ID)].token.lexeme);
                 if(typeVar==-1)
                 {
-                    printf("Line %lu : Variable %s is not declared\n",ast->children[childIdToIndex(ast,TK_ID)].token.lineNumber, ast->children[childIdToIndex(ast,TK_ID)].token.lineNumber);
+                    printf("Line %lu : Variable %s is not declared\n",ast->children[childIdToIndex(ast,TK_ID)].token.lineNumber, ast->children[childIdToIndex(ast,TK_ID)].token.lexeme);
                     semantic_flag=false;
                     return -2;
                 }
@@ -256,37 +256,37 @@ int semantic(parseTree *ast, funcHashTable *functionTable, recHashTable *recordT
             int type;
             varHashTable *temp;
 
-            if(p->children[0].id == TK_READ){
-                tempToken = p->children[1].children[0].token;
-                type = findVariableType(globals,tempToken->lexeme);
+            if(ast->children[0].id == TK_READ){
+                tempToken = ast->children[1].children[0].token;
+                type = findVariableType(globalTable,tempToken.lexeme);
 
                 if(type == -1){
                     //ERROR
                 }else if(type >= 2){
-                    strcpy(name,getRecordName(recs,type));
-                    temp = getRecFields(recs,name);
+                    strcpy(name,getRecordName(recordTable,type));
+                    temp = getRecFields(recordTable,name);
 
-                    if(p->children[1].children[1].children[0].id != eps){
-                        tempToken = p->children[1].children[1].children[0].token;
-                        if(findVariableType(temp,tempToken->lexeme)==-1){
+                    if(ast->children[1].children[1].children[0].id != eps){
+                        tempToken = ast->children[1].children[1].children[0].token;
+                        if(findVariableType(temp,tempToken.lexeme)==-1){
                             //ERROR
                         }
                     }
                 }
-            }else if(p->children[0].id == TK_WRITE){
-                if(p->children[1].children[0].id != TK_NUM && p->children[1].children[0].id != TK_RNUM){
-                    tempToken = p->children[1].children[0].token;
-                    type = findVariableType(globals,tempToken->lexeme);
+            }else if(ast->children[0].id == TK_WRITE){
+                if(ast->children[1].children[0].id != TK_NUM && ast->children[1].children[0].id != TK_RNUM){
+                    tempToken = ast->children[1].children[0].token;
+                    type = findVariableType(globalTable,tempToken.lexeme);
 
                     if(type == -1){
                         //ERROR
                     }else if(type >= 2){
-                        if(p->children[1].children[1].children[0].id != eps){
-                            tempToken = p->children[1].children[1].children[0].token;
-                            strcpy(name,getRecordName(recs,type));
-                            temp = getRecFields(recs,name);
+                        if(ast->children[1].children[1].children[0].id != eps){
+                            tempToken = ast->children[1].children[1].children[0].token;
+                            strcpy(name,getRecordName(recordTable,type));
+                            temp = getRecFields(recordTable,name);
 
-                            if(findVariableType(temp,tempToken->lexeme) == -1){
+                            if(findVariableType(temp,tempToken.lexeme) == -1){
                                 //ERROR
                             }
                         }
@@ -297,8 +297,8 @@ int semantic(parseTree *ast, funcHashTable *functionTable, recHashTable *recordT
 
             //function call statement
         case funCallStmt:
-            tempToken = p->children[1].token;
-            k = functionOrder(funcs,tempToken->lexeme,currFunc);
+            tempToken = ast->children[1].token;
+            k = functionOrder(functionTable,tempToken.lexeme,funcPresent);
 
             if(k == -1){
                 //recursion
@@ -309,23 +309,23 @@ int semantic(parseTree *ast, funcHashTable *functionTable, recHashTable *recordT
             }
 
             varHashTable *output,*input,outCall,inCall;
-            output = getFuncOutputList(funcs,tempToken->lexeme);
-            input = getFuncOutputList(funcs,tempToken->lexeme);
+            output = getFuncOutputList(functionTable,tempToken.lexeme);
+            input = getFuncOutputList(functionTable,tempToken.lexeme);
             createVarTable(&outCall);
             createVarTable(&inCall);
-            parseTree tempTree;
+            astNode tempTree;
 
-            if(p->children[0].children[0].id == idList){
-                tempTree = p->children[0].children[0];
+            if(ast->children[0].children[0].id == idList){
+                tempTree = ast->children[0].children[0];
 
                 do{
                     tempToken = tempTree.children[0].token;
-                    if(findVariableType(globals,tempToken->lexeme) == -1){
+                    if(findVariableType(globalTable,tempToken.lexeme) == -1){
                         //ERROR
                     }else{
                         int g;
-                        g = findVariableType(globals,tempToken->lexeme);
-                        addVariable(&outCall,tempToken->lexeme,g);
+                        g = findVariableType(globalTable,tempToken.lexeme);
+                        addVariable(&outCall,tempToken.lexeme,g);
                     }
 
                     tempTree = tempTree.children[1].children[0];
@@ -336,17 +336,17 @@ int semantic(parseTree *ast, funcHashTable *functionTable, recHashTable *recordT
                 //ERROR
             }
 
-            if(p->children[2].children[0].id == idList){
-                tempTree = p->children[2].children[0];
+            if(ast->children[2].children[0].id == idList){
+                tempTree = ast->children[2].children[0];
 
                 do{
                     tempToken = tempTree.children[0].token;
-                    if(findVariableType(globals,tempToken->lexeme) == -1){
+                    if(findVariableType(globalTable,tempToken.lexeme) == -1){
                         //ERROR
                     }else{
                         int g;
-                        g = findVariableType(globals,tempToken->lexeme);
-                        addVariable(&inCall,tempToken->lexeme,g);
+                        g = findVariableType(globalTable,tempToken.lexeme);
+                        addVariable(&inCall,tempToken.lexeme,g);
                     }
 
                     tempTree = tempTree.children[1].children[0];
@@ -360,23 +360,23 @@ int semantic(parseTree *ast, funcHashTable *functionTable, recHashTable *recordT
 
 
         case returnStmt:
-            if(strcmp(currFunc,"main")!=0){
+            if(strcmp(funcPresent,"main")!=0){
                 varHashTable *output,outCall;
-                output = getFuncOutputList(funcs,currFunc);
+                output = getFuncOutputList(functionTable,funcPresent);
                 createVarTable(&outCall);
-                parseTree tempTree;
+                astNode tempTree;
 
-                if(p->children[0].children[0].id == idList){
-                    tempTree = p->children[0].children[0];
+                if(ast->children[0].children[0].id == idList){
+                    tempTree = ast->children[0].children[0];
 
                     do{
                         tempToken = tempTree.children[0].token;
-                        if(findVariableType(globals,tempToken->lexeme) == -1){
+                        if(findVariableType(globalTable,tempToken.lexeme) == -1){
                             //ERROR
                         }else{
                             int g;
-                            g = findVariableType(globals,tempToken->lexeme);
-                            addVariable(&outCall,tempToken->lexeme,g);
+                            g = findVariableType(globalTable,tempToken.lexeme);
+                            addVariable(&outCall,tempToken.lexeme,g);
                         }
 
                         tempTree = tempTree.children[1].children[0];
@@ -402,13 +402,13 @@ int semantic(parseTree *ast, funcHashTable *functionTable, recHashTable *recordT
                     typeLHS = findVariableType(globalTable, ast->children[childIdToIndex(ast,var)].children[0].token.lexeme);
                     if(typeLHS==-1)
                     {
-                        printf("Line %lu : Variable %s is not declared\n",ast->children[childIdToIndex(ast,var)].children[childIdToIndex(ast,TK_ID)].token.lineNumber, ast->children[childIdToIndex(var)].children[childIdToIndex(ast,TK_ID)].token.lexeme);
+                        printf("Line %lu : Variable %s is not declared\n",ast->children[childIdToIndex(ast,var)].children[childIdToIndex(ast,TK_ID)].token.lineNumber, ast->children[childIdToIndex(ast,var)].children[childIdToIndex(ast,TK_ID)].token.lexeme);
                         semantic_flag=false;
                         return -2;
                     }
                     if(typeLHS>=2)
                     {
-                        printf("Line %lu : Variable %s should be of type INT or REAL in a boolean expression\n",ast->children[childIdToIndex(ast,var)].children[childIdToIndex(ast,TK_ID)].token.lineNumber, ast->children[childIdToIndex(var)].children[childIdToIndex(ast,TK_ID)].token.lexeme);
+                        printf("Line %lu : Variable %s should be of type INT or REAL in a boolean expression\n",ast->children[childIdToIndex(ast,var)].children[childIdToIndex(ast,TK_ID)].token.lineNumber, ast->children[childIdToIndex(ast,var)].children[childIdToIndex(ast,TK_ID)].token.lexeme);
                         semantic_flag=false;
                         return -2;
                     }

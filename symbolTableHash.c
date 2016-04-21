@@ -76,7 +76,7 @@ int findVariableType(varHashTable* varTable, char *name){
     }
 }
 
-varTable* getVarHashTableEntry(varHashTable* varTable,char* name){
+variableTable* getVarHashTableEntry(varHashTable* varTable,char* name){
     key = getKeyVariable(name);
     if(varTable->array[key]==NULL)
         return NULL;
@@ -118,7 +118,7 @@ void createRecTable(recHashTable* recordTable){
     }
 }
 
-void addRec(recHashTable* recordTable, char *name, variableTable *fields, int type){
+void addRec(recHashTable* recordTable, char *name, varHashTable *fields, int type){
 
     key = getKeyRecord(name);
     recTable *new = (recTable *)malloc(sizeof(recTable));
@@ -184,7 +184,7 @@ varHashTable* getRecFields(recHashTable* recordTable, char *name){
 char* getRecordName(recHashTable* recordTable, int type){
 
     int i;
-    for(i=0;i<MAX_RECORDS;i++){
+    for(i=0;i<RECORDS_SIZE;i++){
         tempRec=recordTable->array[i];
         while(tempRec != NULL){
             if(tempRec->type == type){
@@ -201,8 +201,8 @@ void removeRecTable(recHashTable* recordTable){
     int i=0;
     recTable *temp,*temp1;
 
-    while(i<MAX_RECORDS){
-        if(recordTable[i] != NULL){
+    while(i<RECORDS_SIZE){
+        if(recordTable->array[i] != NULL){
             temp = recordTable->array[i];
 
             while(temp != NULL){

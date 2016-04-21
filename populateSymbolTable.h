@@ -13,13 +13,12 @@
 #include "parserDef.h"
 
 
-bool populateRecordTable(parseTree *t, recHashTable *recordTable);
-bool populateGlobalTable(parseTree *t, varHashTable *globals,recHashTable *recordTable);
-bool populateLocalTable(parseTree *t, varHashTable *local,recHashTable *recordTable);
-int semantic(parseTree *p, funcHashTable *funcs, recHashTable *recs, varHashTable *globals, char *currFunc);
+bool populateRecordTable(astNode *t, recHashTable *recordTable);
+bool populateGlobalTable(astNode *t, varHashTable *globals,recHashTable *recordTable);
+bool populateLocalTable(astNode *t, varHashTable *local,recHashTable *recordTable);
 int functionOrder(funcHashTable *funcs, char *callee, char *caller);
 int compareVarHashTables(varHashTable *t1,varHashTable *t2);
-int childIdToIndex(parseTree *parent, int id);
-void populateFunctionTable(parseTree *t, funcHashTable *functionTable, recHashTable* recordTable);
+int childIdToIndex(astNode *parent, int id);
+void populateFunctionTable(astNode *t, funcHashTable *functionTable, recHashTable* recordTable);
 
 #endif

@@ -2,7 +2,7 @@
 
 extern bool semantic_flag;
 
-int childIdToIndex(parseTree *parent, int id){
+int childIdToIndex(astNode *parent, int id){
     int i;
     for(i=0;i<parent->numChildren;++i){
         if(parent->children[i].id==id)
@@ -12,7 +12,7 @@ int childIdToIndex(parseTree *parent, int id){
 }
 int recordTypeCounter = 1;
 
-bool populateRecordTable(parseTree *t, recHashTable *recordTable)
+bool populateRecordTable(astNode *t, recHashTable *recordTable)
 {
     tokenInfo tempToken;
 
@@ -26,7 +26,7 @@ bool populateRecordTable(parseTree *t, recHashTable *recordTable)
                 return false;
             }
 
-            parseTree temp = t->children[2];
+            astNode temp = t->children[2];
             int type;
             varHashTable fields;
 
@@ -61,10 +61,10 @@ bool populateRecordTable(parseTree *t, recHashTable *recordTable)
 }
 
 
-bool populateGlobalTable(parseTree *t, varHashTable *globals,recHashTable *recordTable)
+bool populateGlobalTable(astNode *t, varHashTable *globals,recHashTable *recordTable)
 {
 
-    tokenInfo *tempToken;
+    tokenInfo tempToken;
     if(!isTerm(t->id))
     {
         if(t->id == declaration)
@@ -103,9 +103,9 @@ bool populateGlobalTable(parseTree *t, varHashTable *globals,recHashTable *recor
 
 }
 
-bool populateLocalTable(parseTree *t, varHashTable *local,recHashTable *recordTable)
+bool populateLocalTable(astNode *t, varHashTable *local,recHashTable *recordTable)
 {
-    tokenInfo *tempToken;
+    tokenInfo tempToken;
     if(!isTerm(t->id))
     {
         if(t->id == declaration)
@@ -184,7 +184,7 @@ int functionOrder(funcHashTable *funcs, char *callee, char *caller){
     }
 }
 
-void populateFunctionTable(parseTree *t, funcHashTable *functionTable, recHashTable* recordTable){
+void populateFunctionTable(astNode *t, funcHashTable *functionTable, recHashTable* recordTable){
     
     if(!isTerm(t->id))
     {
@@ -192,51 +192,52 @@ void populateFunctionTable(parseTree *t, funcHashTable *functionTable, recHashTa
         {
             char* name = (char *)malloc(SIZE_MAX_FUNID*sizeof(char));
             int nameChild;
-            childName=childIdToIndex(t,TK_FUNID);
+            nameChild=childIdToIndex(t,TK_FUNID);
             strcpy(name,t->children[nameChild].token.lexeme);
             varHashTable* inputList = (varHashTable*)malloc(sizeof(varHashTable));
             varHashTable* outputList = (varHashTable*)malloc(sizeof(varHashTable));
 
             if(findFunc(functionTable,name)==true)
             {
-                printf("Line %lu : Redeclaration of function : %s\n",t->children[childName].token.lineNumber,name);
+                printf("Line %lu : Redeclaration of function : %s\n",t->children[nameChild].token.lineNumber,name);
                 semantic_flag = false;
             }
 
-            parseTree parameterListNode = t->children[childToIndex(input_par)].children[childIdToIndex(parameter_list)];
+            astNode parameterListNode = t->children[childToIndex(t,input_par)].children[childIdToIndex(t,parameter_list)];
 
             while(1)
             {
                 int formalParameterType;
                 
-                if(parameterListNode.children[childToIndex(dataType)].children[0].id==primitiveDatatype)
+                if(parameterListNode.children[childToIndex(t,dataType)].children[0].id==primitiveDatatype)
                 {
-                    formalParameterType = parameterListNode.children[childToIndex(dataType)].children[childToIndex(primitiveDatatype)].children[0].id;
-                    addVariable(inputList, parameterListNode.children[childToIndex(TK_ID)].token.lexeme, formalParameterType);
+                    formalParameterType = parameterListNode.children[childToIndex(t,dataType)].children[childToIndex(t,primitiveDatatype)].children[0].id;
+                    addVariable(inputList, parameterListNode.children[childToIndex(t,TK_ID)].token.lexeme, formalParameterType);
 
                 }
                 else
                 {
-                    formalParameterType = findRecType(recordTable, parameterListNode.children[childToIndex(dataType)].children[childToIndex(constructedDatatype)].children[childToIndex(TK_RECORDID)].token.lexeme);
-                    addVariable(inputList, parameterListNode.children[childToIndex(TK_ID)].token.lexeme, formalParameterType);
+                    formalParameterType = findRecType(recordTable, parameterListNode.children[childToIndex(t,dataType)].children[childToIndex(t,constructedDatatype)].children[childToIndex(t,TK_RECORDID)].token.lexeme);
+                    addVariable(inputList, parameterListNode.children[childToIndex(t,TK_ID)].token.lexeme, formalParameterType);
                 }
-                if(parameterListNode.children[childToIndex(remaining_list)].children[0].id == eps)
+                if(parameterListNode.children[childToIndex(t,remaining_list)].children[0].id == eps)
                     break;
-                parameterListNode = parameterListNode.children[childToIndex(remaining_list)].children[childToIndex(parameter_list)];
+                parameterListNode = parameterListNode.children[childToIndex(t,remaining_list)].children[childToIndex(t,parameter_list)];
             }
             
-            parseTree outputParameterNode = t->children[childToIndex(output_par)];
+            astNode outputParameterNode = t->children[childToIndex(t,output_par)];
             if(outputParameterNode.children[0].id == eps)
                 outputList=NULL;
             else
             {
-                parameterListNode = t->children[childToIndex(output_par)].children[childIdToIndex(parameter_list)];
+                parameterListNode = t->children[childToIndex(t,output_par)].children[childIdToIndex(t,parameter_list)];
                 while(1)
                 {
-                    if(parameterListNode.children[childToIndex(dataType)].children[0].id==primitiveDatatype)
+                    int formalParameterType;
+                    if(parameterListNode.children[childToIndex(t,dataType)].children[0].id==primitiveDatatype)
                     {
-                        formalParameterType = parameterListNode.children[childToIndex(dataType)].children[childToIndex(primitiveDatatype)].children[0].id;
-                        addVariable(outputList, parameterListNode.children[childToIndex(TK_ID)].token.lexeme, formalParameterType);
+                        formalParameterType = parameterListNode.children[childToIndex(t,dataType)].children[childToIndex(t,primitiveDatatype)].children[0].id;
+                        addVariable(outputList, parameterListNode.children[childToIndex(t,TK_ID)].token.lexeme, formalParameterType);
 
                     }
                     else
@@ -245,9 +246,9 @@ void populateFunctionTable(parseTree *t, funcHashTable *functionTable, recHashTa
                         addVariable(outputList, parameterListNode.children[childToIndex(TK_ID)].token.lexeme, formalParameterType);
                     }
 
-                    if(parameterListNode.children[childToIndex(remaining_list)].children[0].id == eps)
+                    if(parameterListNode.children[childToIndex(t,remaining_list)].children[0].id == eps)
                         break;
-                    parameterListNode = parameterListNode.children[childToIndex(remaining_list)].children[childToIndex(parameter_list)];
+                    parameterListNode = parameterListNode.children[childToIndex(t,remaining_list)].children[childToIndex(t,parameter_list)];
                 }
             }
 

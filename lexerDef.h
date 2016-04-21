@@ -13,6 +13,7 @@
 #define SIZE_MAX_TOKEN 20 // the largest size is 13 (tk_parameters)
 #define SIZE_MAX_ERROR_MSG 1000
 #define SIZE_MAX_FUNID 30
+#define MAX_ID_SIZE 100
 
 typedef char* buffer;
 typedef unsigned long long buffersize; 

@@ -1,9 +1,11 @@
 #ifndef SYMBOLTABLEHASH_H
 #define SYMBOLTABLEHASH_H
 
+#include<stdbool.h>
 #define VARIABLES_SIZE 37
 #define RECORDS_SIZE 37
 #define FUNCTIONS_SIZE 37
+#define MAX_ID_SIZE 100
 
 typedef struct variableTable{
     char *name;
