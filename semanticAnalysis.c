@@ -349,7 +349,7 @@ int semantic(astNode *ast, funcHashTable *functionTable, recHashTable *recordTab
                 }while(tempTree.children[1].children[0].id != eps);
             }
 
-            if(compareVarHashTables(output,outCall) == 0){
+            if(compareVarHashTables(output,outCall,tempToken.lineNumber) == 0){
                 semantic_flag=false;
                 return -2;
             }
@@ -374,7 +374,7 @@ int semantic(astNode *ast, funcHashTable *functionTable, recHashTable *recordTab
 
             }
 
-            if(compareVarHashTables(input,inCall) == 0){
+            if(compareVarHashTables(input,inCall,tempToken.lineNumber) == 0){
                 semantic_flag=false;
                 return -2;
             }
@@ -406,7 +406,7 @@ int semantic(astNode *ast, funcHashTable *functionTable, recHashTable *recordTab
                     }while(tempTree.children[1].children[0].id != eps);
                 }
 
-                if(compareVarHashTables(output,outCall) == 0){
+                if(compareVarHashTables(output,outCall,tempToken.lineNumber) == 0){
      	           semantic_flag=false;
         	        return -2;
                 }
