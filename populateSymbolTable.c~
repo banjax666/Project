@@ -299,7 +299,7 @@ int compareVarHashTables(varHashTable *t1,varHashTable *t2,int lineNum){
     }
 
     if(maxpos1 != maxpos2){
-	printf("Line No. %lu : Mismatch in number of parameters.\n",lineNum);
+	printf("Line No. %lu : Mismatch in number of parameters.\n",lineNum,);
 	return 0;
 	}
     return 1;

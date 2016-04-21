@@ -42,7 +42,7 @@ void createVarTable(varHashTable* varTable){
     }
 }
 
-void addVariable(varHashTable* varTable , char *name, int type, int position){
+void addVariable(varHashTable* varTable , char *name, int type,int position){
     key = getKeyVariable(name);
     variableTable* newNode = (variableTable *)malloc(sizeof(variableTable));
     newNode->name=(char *)malloc((strlen(name) + 1) * sizeof(char));
