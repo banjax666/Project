@@ -14,7 +14,7 @@ all: toycompiler
 toycompiler:	$(OBJECTS)
 	$(CC) $(CFLAGS) $(OBJECTS) -o $@
 
-ast.o: parserDef.h lexer.h parser.h ast.h
+ast.o: parserDef.h lexer.h parser.h ast.h semanticAnalysis.h
 driver.o: lexer.h parser.h
 lexer.o: lexerDef.h lexer.h
 parser.o: parserDef.h lexerDef.h lexer.h

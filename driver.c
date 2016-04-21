@@ -9,6 +9,7 @@
 #include "lexer.h"
 #include "parser.h"
 #include "ast.h"
+#include "semanticAnalysis.h"
 
 bool semantic_flag = true;
 int main(int argc, char *argv[]){
@@ -43,9 +44,9 @@ int main(int argc, char *argv[]){
     int parseReturn;
     parseTree root;
     astNode astRoot;
-    varHashTable *temp,*global;
-    recHashTable *recs;
-    funcHashTable *funcs;
+    varHashTable temp,global;
+    recHashTable recs;
+    funcHashTable funcs;
     tokenInfo tokenCurrent;
 
     int i,j;
@@ -106,7 +107,7 @@ int main(int argc, char *argv[]){
 
                 fseek(fpSource,0,SEEK_SET);
                 flag=1;
-                printParseTree(root,"console");
+                printParseTree(root,"ptree.txt");
                 if(parseReturn!=0)
                     printf("compilation failed, syntactic errors displayed. Cannot generate AST\n");
                 printf("2 done");
@@ -127,7 +128,7 @@ int main(int argc, char *argv[]){
                 }
                 else{
                     buildAST(&root,&astRoot);
-                    printAST(astRoot,"console");
+                    printAST(astRoot,"asttree.txt");
                     astFlag=1;
                 }
                 printf("3 done");
@@ -156,8 +157,8 @@ int main(int argc, char *argv[]){
                 getNumNodesParseTree(root, &parseTreeNodes);
                 astMem=sizeof(astNode) * astNodes;
                 pTreeMem=sizeof(parseTree) * parseTreeNodes;
-                printf("Parse Tree  Number of Nodes=%d  Allocated Memory=%lu Bytes",parseTreeNodes,pTreeMem);
-                printf("AST         Number of Nodes=%d  Allocated Memory=%lu Bytes",astNodes,astMem);
+                printf("Parse Tree  Number of Nodes=%d  Allocated Memory=%lu Bytes\n",parseTreeNodes,pTreeMem);
+                printf("AST         Number of Nodes=%d  Allocated Memory=%lu Bytes\n",astNodes,astMem);
         break;
             case 5:
                 if(astFlag==0){
@@ -179,10 +180,10 @@ int main(int argc, char *argv[]){
                         astFlag=1;
                     }
                 }
-        createVarTable(temp);
+        createVarTable(&temp);
     if(recordTableFlag == 0){
-            createRecTable(recs);
-            populateRecordTable(astRoot,recs);
+            createRecTable(&recs);
+            populateRecordTable(&astRoot,&recs);
         recordTableFlag = 1;
     }
         //printSymbolTable(astRoot,temp,recs);
@@ -209,18 +210,18 @@ int main(int argc, char *argv[]){
                         }
                     }
     if(recordTableFlag == 0){
-            createRecTable(recs);
-            populateRecordTable(astRoot,recs);
+            createRecTable(&recs);
+            populateRecordTable(&astRoot,&recs);
         recordTableFlag = 1;
     }
-            createFuncTable(funcs);
-            populateFunctionTable(astRoot,funcs,recs);
-            createVarTable(global);
-            populateGlobalTable(astRoot,global,recs);
-            semantic(astRoot,funcs,recs,global,funcs);
+            createFuncTable(&funcs);
+            populateFunctionTable(&astRoot,&funcs,&recs);
+            createVarTable(&global);
+            populateGlobalTable(&astRoot,&global,&recs);
+            semantic(&astRoot,&funcs,&recs,&global,"");
             symFlag = 1;
         }else{
-            semantic(astRoot,funcs,recs,global,funcs);
+            semantic(&astRoot,&funcs,&recs,&global,"");
         }
         break;
 

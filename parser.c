@@ -816,6 +816,7 @@ void printParseTree(parseTree PT, char *parseTreeDisplayFile){
 	fprintf(fp, "lexemeCurrentNode             lineno    token               valOfNum  parentNodeSymbol              isLeafNode(yes/no)  NodeSymbol\n\n\n");	
 	
 	printParseTreeHelper(&PT, fp);
+
 }
 
 void getNumNodesParseTree(parseTree p, int *nodes){

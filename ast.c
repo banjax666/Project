@@ -249,6 +249,7 @@ void printAST(astNode PT, char *parseTreeDisplayFile){
     fprintf(fp, "lexemeCurrentNode             lineno    token               valOfNum  parentNodeSymbol              isLeafNode(yes/no)  NodeSymbol\n\n\n");
 
     printASTHelper(&PT, fp);
+
 }
 
 void getNumNodesAST(astNode ast, int *nodes){

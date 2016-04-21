@@ -98,6 +98,7 @@ int childIdToIndex(astNode *parent, int id){
     int i;
     for(i=0;i<parent->numChildren;++i){
         if(parent->children[i].id==id)
+            printf("%d\n",i);
             return i;
     }
     return -1;
