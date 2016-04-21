@@ -24,6 +24,7 @@ int key;
 
 void addVariable(varHashTable* varTable , char *name, int type);
 int findVariableType(varHashTable* varTable, char *name);//returns -1 if no variable, else variable type
+varTable* getVarHashTableEntry(varHashTable* varTable,char* name);
 void removeVariableTable(varHashTable* varTable);
 int typeIntOrReal(int type);
 

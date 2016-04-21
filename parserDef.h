@@ -7,7 +7,7 @@
 #define HEADERPARSERDEF
 
 #include "lexerDef.h"
-
+#include "symbolTableHash.h"
 
 typedef struct grammar1 {
 	int LHS;
@@ -137,12 +137,21 @@ typedef struct parseTreeNode{
     struct parseTreeNode* children;//MAX_CHILDREN
 
 } parseTreeNode;
+
 typedef struct stack_struct{
 	IDS data;
 	struct stack_struct* below;
 }stack_struct;
 
-
+typedef struct astNode{
+    int numChildren;
+    IDS id;
+    IDS parentId;
+    tokenInfo token;
+    struct astNode* children;
+    struct astNode* collapseTo;
+    variableTable* symbolTableEntry;
+} astNode;
 
 
 typedef parseTreeNode parseTree;

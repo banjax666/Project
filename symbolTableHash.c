@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include "symboltablehash.h"
+#include "symbolTableHash.h"
 #include "lexerDef.h"
 #include "parserDef.h"
 
@@ -33,6 +33,12 @@ int getKeyFunction(char *name){
     }
     sum=sum%FUNCTIONS_SIZE;
     return sum;
+}
+void createVarTable(varHashTable* varTable){
+    int i;
+    for(i=0;i<VARIABLES_SIZE;i++){
+        varTable->array[i]=NULL;
+    }
 }
 
 void addVariable(varHashTable* varTable , char *name, int type){
@@ -70,6 +76,22 @@ int findVariableType(varHashTable* varTable, char *name){
     }
 }
 
+varTable* getVarHashTableEntry(varHashTable* varTable,char* name){
+    key = getKeyVariable(name);
+    if(varTable->array[key]==NULL)
+        return NULL;
+    else{
+        tempVar=varTable->array[key];
+        while(tempVar!=NULL){
+            if(!strcmp(tempVar->name,name)){
+                return tempVar;
+            }
+            tempVar= tempVar->next;
+        }
+        return NULL;
+    }
+}
+
 int typeIntOrReal(int type){
     if(type)
         return TK_RNUM;
@@ -87,6 +109,13 @@ void removeVariableTable(varHashTable* varTable){
         }
     }
     free(varTable);
+}
+
+void createRecTable(recHashTable* recordTable){
+    int i;
+    for(i=0;i<RECORDS_SIZE;i++){
+        recordTable->array[i]=NULL;
+    }
 }
 
 void addRec(recHashTable* recordTable, char *name, variableTable *fields, int type){
@@ -183,9 +212,16 @@ void removeRecTable(recHashTable* recordTable){
                 removeVariableTable(temp1->recFields);
                 free(temp1);
             }
-            recordTable[i] = NULL;
+            recordTable->array[i] = NULL;
         }
         i++;
+    }
+}
+
+void createFuncTable(funcHashTable* functionTable){
+    int i;
+    for(i=0;i<FUNCTIONS_SIZE;i++){
+        functionTable->array[i]=NULL;
     }
 }
 
