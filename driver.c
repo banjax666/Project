@@ -73,7 +73,7 @@ int main(int argc, char *argv[]){
 
     int z=0;
     int flag=0;
-    int astFlag =0,symFlag=0;
+    int astFlag =0,symFlag=0,recordTableFlag = 0;
 
     do{
         printf("\nType option:\n\n");
@@ -177,7 +177,12 @@ int main(int argc, char *argv[]){
                     }
                 }
         createVarTable(temp);
-        //printSymbolTable(astRoot,temp);
+    if(recordTableFlag == 0){
+            createRecTable(recs);
+            populateRecordTable(astRoot,recs);
+        recordTableFlag = 1;
+    }
+        //printSymbolTable(astRoot,temp,recs);
         //removeVariableTable(temp);
             case 6:
             if(symFlag == 0){
@@ -200,8 +205,11 @@ int main(int argc, char *argv[]){
                             astFlag=1;
                         }
                     }
+    if(recordTableFlag == 0){
             createRecTable(recs);
             populateRecordTable(astRoot,recs);
+        recordTableFlag = 1;
+    }
             createFuncTable(funcs);
             populateFunctionTable(astRoot,funcs,recs);
             createVarTable(global);

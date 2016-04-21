@@ -3,7 +3,7 @@
 extern bool semantic_flag;
 int recordTypeCounter = 1;
 
-void printSymbolTable(parseTree *t,varHashTable *symbolTable){
+void printSymbolTable(parseTree *t,varHashTable *symbolTable,recHashTable *recs){
 
     if(!isTerm(t->id)){
         if(t->id == function || t->id == mainFunction){
@@ -14,20 +14,20 @@ void printSymbolTable(parseTree *t,varHashTable *symbolTable){
                 tokenInfo tempToken;
                 tempToken = t->children[0].token;
                 strcpy(name,tempToken.lexeme);
-                printSymbolTableHelper(t,symbolTable,name,0);
+                printSymbolTableHelper(t,symbolTable,name,0,recs);
             }else{
-                printSymbolTableHelper(t,symbolTable,"main",0);
+                printSymbolTableHelper(t,symbolTable,"main",0,recs);
             }
         }else{
             int i;
                     for(i = 0; i < t->numChildren; i++){
-                        printSymbolTable(&t->children[i],symbolTable);
+                        printSymbolTable(&t->children[i],symbolTable,recs);
             }
         }
     }
 }
 
-int printSymbolTableHelper(parseTree *t,varHashTable *symbolTable,char *currFunc,int offset){
+int printSymbolTableHelper(parseTree *t,varHashTable *symbolTable,char *currFunc,int offset,recHashTable *recs){
 
     if(!isTerm(t->id)){
         if(t->id == declaration){
@@ -44,14 +44,14 @@ int printSymbolTableHelper(parseTree *t,varHashTable *symbolTable,char *currFunc
                             printf("%s\tint\tglobal\t%d",tempToken.lexeme,offset);
                             offset+=4;
                             return offset;
-                        else{
+                        }else{
                             printf("%s\treal\tglobal\t%d",tempToken.lexeme,offset);
                             offset+=2;
                             return offset;
                         }
                     }else{
                             tempToken = t->children[1].children[0].children[1].token;
-                                    type = findRecType(recordTable,tempToken.lexeme);
+                                    type = findRecType(recs,tempToken.lexeme);
                         tempToken = t->children[2].token;
                         addVariable(symbolTable,tempToken.lexeme,type);
                         printf("%s\t",tempToken.lexeme);
@@ -66,14 +66,14 @@ int printSymbolTableHelper(parseTree *t,varHashTable *symbolTable,char *currFunc
                             printf("%s\tint\t%s\t%d",tempToken.lexeme,currFunc,offset);
                             offset+=4;
                             return offset;
-                        else{
+                        }else{
                             printf("%s\treal\t%s\t%d",tempToken.lexeme,currFunc,offset);
                             offset+=2;
                             return offset;
                         }
                     }else{
                         tempToken = t->children[1].children[0].children[1].token;
-                                type = findRecType(recordTable,tempToken.lexeme);
+                                type = findRecType(recs,tempToken.lexeme);
                         tempToken = t->children[2].token;
                         addVariable(symbolTable,tempToken.lexeme,type);
                         printf("%s\t",tempToken.lexeme);
@@ -86,7 +86,7 @@ int printSymbolTableHelper(parseTree *t,varHashTable *symbolTable,char *currFunc
         }else{
             int i;
             for(i=0;i<t->numChildren;i++){
-                offset = printSymbolTableHelper(&t->children[i],symbolTable,currFunc,offset);
+                offset = printSymbolTableHelper(&t->children[i],symbolTable,currFunc,offset,recs);
             }
         }
     }
@@ -392,5 +392,4 @@ void populateFunctionTable(astNode *t, funcHashTable *functionTable, recHashTabl
         }
     }
 }
-
 
