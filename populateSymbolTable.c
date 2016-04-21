@@ -151,6 +151,21 @@ bool populateRecordTable(astNode *t, recHashTable *recordTable)
 
 }
 
+void addVarHashTable(varHashTable *dest,varHashTable *src){
+	int i;
+	variableTable *temp;
+	for(i=0;i<VARIABLES_SIZE;i++){
+		temp = src->array[i];
+		while(temp != NULL){
+			if(findVariableType(dest,temp->name) == -1){
+				semantic_flag = false;
+			}else{
+				addVariable(dest,temp->name,temp->type);
+			}
+			temp=temp->next;
+		}
+	}
+}
 
 bool populateGlobalTable(astNode *t, varHashTable *globals,recHashTable *recordTable)
 {

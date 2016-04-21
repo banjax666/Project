@@ -19,6 +19,7 @@ bool populateLocalTable(astNode *t, varHashTable *local,recHashTable *recordTabl
 int functionOrder(funcHashTable *funcs, char *callee, char *caller);
 int compareVarHashTables(varHashTable *t1,varHashTable *t2);
 int childIdToIndex(astNode *parent, int id);
+void addVarHashTable(varHashTable *dest,varHashTable *src);
 int getFuncLineNumber(funcHashTable *funcs,char *name);
 void populateFunctionTable(astNode *t, funcHashTable *functionTable, recHashTable* recordTable);
 
