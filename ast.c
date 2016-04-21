@@ -45,7 +45,7 @@ void buildAST(parseTree *pTree, astNode *ast) {
     int parseTreeCounter=0, astCounter=0;
     ast->numChildren=0;
     for(parseTreeCounter = 0; parseTreeCounter < pTree->numChildren; parseTreeCounter++)
-        if( (isTerm(pTree->id)==0) || used(pTree->children[parseTreeCounter].id))
+        if( (isTerm(pTree->children[parseTreeCounter].id)==0) || used(pTree->children[parseTreeCounter].id))
             ast->numChildren++;
 
     ast->children = (astNode *)malloc(ast->numChildren * sizeof(astNode));
@@ -62,7 +62,7 @@ void buildAST(parseTree *pTree, astNode *ast) {
             astCounter++;
 
         }
-        else { 
+        else if(isTerm(pTree->children[parseTreeCounter].id)==0 ){
 
             ast->children[astCounter].id = pTree->children[parseTreeCounter].id;
             buildAST(&pTree->children[parseTreeCounter], &ast->children[astCounter]);

@@ -103,9 +103,12 @@ int main(int argc, char *argv[]){
                 parseReturn =  parseInputSourceCode(fpSource, B, k, &tokenCurrent, &root, G , PT);
                 updateFilePointer();
                 printf("Parsing routine complete\n");
+
                 fseek(fpSource,0,SEEK_SET);
                 flag=1;
                 printParseTree(root,"console");
+                if(parseReturn!=0)
+                    printf("compilation failed, syntactic errors displayed. Cannot generate AST\n");
                 printf("2 done");
                 break;
             case 3:
