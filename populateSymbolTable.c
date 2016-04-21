@@ -3,95 +3,95 @@
 extern bool semantic_flag;
 int recordTypeCounter = 1;
 
-//void printSymbolTable(parseTree *t,varHashTable *symbolTable){
+void printSymbolTable(parseTree *t,varHashTable *symbolTable){
 
-//    if(!isTerm(t->id)){
-//        if(t->id == function || t->id == mainFunction){
+    if(!isTerm(t->id)){
+        if(t->id == function || t->id == mainFunction){
 
-//            if(t->id == function){
-//                char *name;
-//                name = (char *)malloc(MAX_ID_SIZE*sizeof(char));
-//                tokenInfo tempToken;
-//                tempToken = t->children[0].token;
-//                strcpy(name,tempToken.lexeme);
-//                printSymbolTableHelper(t,symbolTable,name,0);
-//            }else{
-//                printSymbolTableHelper(t,symbolTable,"main",0);
-//            }
-//        }else{
-//            int i;
-//                    for(i = 0; i < t->numChildren; i++){
-//                        printSymbolTable(&t->children[i],symbolTable);
-//            }
-//        }
-//    }
-//}
+            if(t->id == function){
+                char *name;
+                name = (char *)malloc(MAX_ID_SIZE*sizeof(char));
+                tokenInfo tempToken;
+                tempToken = t->children[0].token;
+                strcpy(name,tempToken.lexeme);
+                printSymbolTableHelper(t,symbolTable,name,0);
+            }else{
+                printSymbolTableHelper(t,symbolTable,"main",0);
+            }
+        }else{
+            int i;
+                    for(i = 0; i < t->numChildren; i++){
+                        printSymbolTable(&t->children[i],symbolTable);
+            }
+        }
+    }
+}
 
-//int printSymbolTableHelper(parseTree *t,varHashTable *symbolTable,char *currFunc,int offset){
+int printSymbolTableHelper(parseTree *t,varHashTable *symbolTable,char *currFunc,int offset){
 
-//    if(!isTerm(t->id)){
-//        if(t->id == declaration){
-//            tokenInfo tempToken;
-//            int type;
-//            tempToken = t->children[2].token;
+    if(!isTerm(t->id)){
+        if(t->id == declaration){
+            tokenInfo tempToken;
+            int type;
+            tempToken = t->children[2].token;
 
-//                    if(findVariableType(symbolTable,tempToken.lexeme) == -1){
-//                        if(t->children[3].children[0].id == TK_GLOBAL){
-//                    if(t->children[1].children[0].id  ==primitiveDatatype){
-//                        type = t->children[1].children[0].children[0].id - TK_INT;
-//                        addVariable(symbolTable,tempToken.lexeme,type);
-//                        if(t->children[1].children[0].children[0].id == TK_INT){
-//                            printf("%s\tint\tglobal\t%d",tempToken.lexeme,offset);
-//                            offset+=4;
-//                            return offset;
-//                        else{
-//                            printf("%s\treal\tglobal\t%d",tempToken.lexeme,offset);
-//                            offset+=2;
-//                            return offset;
-//                        }
-//                    }else{
-//                            tempToken = t->children[1].children[0].children[1].token;
-//                                    type = findRecType(recordTable,tempToken.lexeme);
-//                        tempToken = t->children[2].token;
-//                        addVariable(symbolTable,tempToken.lexeme,type);
-//                        printf("%s\t",tempToken.lexeme);
+                    if(findVariableType(symbolTable,tempToken.lexeme) == -1){
+                        if(t->children[3].children[0].id == TK_GLOBAL){
+                    if(t->children[1].children[0].id  ==primitiveDatatype){
+                        type = t->children[1].children[0].children[0].id - TK_INT;
+                        addVariable(symbolTable,tempToken.lexeme,type);
+                        if(t->children[1].children[0].children[0].id == TK_INT){
+                            printf("%s\tint\tglobal\t%d",tempToken.lexeme,offset);
+                            offset+=4;
+                            return offset;
+                        else{
+                            printf("%s\treal\tglobal\t%d",tempToken.lexeme,offset);
+                            offset+=2;
+                            return offset;
+                        }
+                    }else{
+                            tempToken = t->children[1].children[0].children[1].token;
+                                    type = findRecType(recordTable,tempToken.lexeme);
+                        tempToken = t->children[2].token;
+                        addVariable(symbolTable,tempToken.lexeme,type);
+                        printf("%s\t",tempToken.lexeme);
 
-//                        printf("%s\t%d",currFunc,offset);
-//                    }
-//                }else{
-//                    if(t->children[1].children[0].id  ==primitiveDatatype){
-//                        type = t->children[1].children[0].children[0].id - TK_INT;
-//                        addVariable(symbolTable,tempToken.lexeme,type);
-//                        if(t->children[1].children[0].children[0].id == TK_INT){
-//                            printf("%s\tint\t%s\t%d",tempToken.lexeme,currFunc,offset);
-//                            offset+=4;
-//                            return offset;
-//                        else{
-//                            printf("%s\treal\t%s\t%d",tempToken.lexeme,currFunc,offset);
-//                            offset+=2;
-//                            return offset;
-//                        }
-//                    }else{
-//                        tempToken = t->children[1].children[0].children[1].token;
-//                                type = findRecType(recordTable,tempToken.lexeme);
-//                        tempToken = t->children[2].token;
-//                        addVariable(symbolTable,tempToken.lexeme,type);
-//                        printf("%s\t",tempToken.lexeme);
+                        printf("%s\t%d",currFunc,offset);
+                    }
+                }else{
+                    if(t->children[1].children[0].id  ==primitiveDatatype){
+                        type = t->children[1].children[0].children[0].id - TK_INT;
+                        addVariable(symbolTable,tempToken.lexeme,type);
+                        if(t->children[1].children[0].children[0].id == TK_INT){
+                            printf("%s\tint\t%s\t%d",tempToken.lexeme,currFunc,offset);
+                            offset+=4;
+                            return offset;
+                        else{
+                            printf("%s\treal\t%s\t%d",tempToken.lexeme,currFunc,offset);
+                            offset+=2;
+                            return offset;
+                        }
+                    }else{
+                        tempToken = t->children[1].children[0].children[1].token;
+                                type = findRecType(recordTable,tempToken.lexeme);
+                        tempToken = t->children[2].token;
+                        addVariable(symbolTable,tempToken.lexeme,type);
+                        printf("%s\t",tempToken.lexeme);
 
-//                        printf("%s\t%d",currFunc,offset);
+                        printf("%s\t%d",currFunc,offset);
 
-//                    }
-//                }
-//                    }
-//        }else{
-//            int i;
-//            for(i=0;i<t->numChildren;i++){
-//                offset = printSymbolTableHelper(&t->children[i],symbolTable,currFunc,offset);
-//            }
-//        }
-//    }
-//    return offset;
-//}
+                    }
+                }
+                    }
+        }else{
+            int i;
+            for(i=0;i<t->numChildren;i++){
+                offset = printSymbolTableHelper(&t->children[i],symbolTable,currFunc,offset);
+            }
+        }
+    }
+    return offset;
+}
 
 
 int childIdToIndex(astNode *parent, int id){
