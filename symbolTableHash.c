@@ -225,13 +225,14 @@ void createFuncTable(funcHashTable* functionTable){
     }
 }
 
-void addFunc(funcHashTable* functionTable, char *name, varHashTable *inputList, varHashTable *outputList){
+void addFunc(funcHashTable* functionTable, char *name, varHashTable *inputList, varHashTable *outputList,int lineNum){
     key = getKeyFunction(name);
     funcTable* newNode = (funcTable *)malloc(sizeof(funcTable));
     newNode->name=(char *)malloc((strlen(name) + 1) * sizeof(char));
     strcpy(newNode->name,name);
     newNode->inputList=inputList;
     newNode->outputList=outputList;
+    newNode->lineNum = lineNum;
     newNode->next = NULL;
     if(functionTable->array[key]==NULL){
         functionTable->array[key]=newNode;

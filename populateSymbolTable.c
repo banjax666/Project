@@ -1,6 +1,97 @@
 #include "populateSymbolTable.h"
 
 extern bool semantic_flag;
+int recordTypeCounter = 1;
+/*
+void printSymbolTable(parseTree *t,varHashTable *symbolTable){
+
+    if(!isTerm(t->id)){
+        if(t->id == function || t->id == mainFunction){
+
+            if(t->id == function){
+                char *name;
+                name = (char *)malloc(MAX_ID_SIZE*sizeof(char));
+                tokenInfo *tempToken;
+                tempToken = t->children[0].token;
+                strcpy(name,tempToken->lexeme);
+                printSymbolTableHelper(t,symbolTable,name,0);
+            }else{
+                printSymbolTableHelper(t,symbolTable,"main",0);
+            }
+        }else{
+            int i;
+                    for(i = 0; i < t->numChildren; i++){
+                        printSymbolTable(&t->children[i],symbolTable);
+            }
+        }
+    }
+}
+
+int printSymbolTableHelper(parseTree *t,varHashTable *symbolTable,char *currFunc,int offset){
+
+    if(!isTerm(t->id)){
+        if(t->id == declaration){
+            tokenInfo *tempToken;
+            tempToken = t->children[2].token;
+
+                    if(findVariableType(symbolTable,tempToken->lexeme) == -1){
+                        if(t->children[3].children[0].id == TK_GLOBAL){
+                    if(t->children[1].children[0].id  ==primitiveDatatype){
+                        type = t->children[1].children[0].children[0].id - TK_INT;
+                        addVariable(symbolTable,tempToken->lexeme,type);
+                        if(t->children[1].children[0].children[0].id == TK_INT){
+                            printf("%s\tint\tglobal\t%d",tempToken->lexeme,offset);
+                            offset+=4;
+                            return offset;
+                        else{
+                            printf("%s\treal\tglobal\t%d",tempToken->lexeme,offset);
+                            offset+=2;
+                            return offset;
+                        }
+                    }else{
+                            tempToken = t->children[1].children[0].children[1].token;
+                                    type = findRecType(recordTable,tempToken->lexeme);
+                        tempToken = t->children[2].token;
+                        addVariable(symbolTable,tempToken->lexeme,type);
+                        printf("%s\t",tempToken->lexeme);
+
+                        printf("%s\t%d",currFunc,offset);
+                    }
+                }else{
+                    if(t->children[1].children[0].id  ==primitiveDatatype){
+                        type = t->children[1].children[0].children[0].id - TK_INT;
+                        addVariable(symbolTable,tempToken->lexeme,type);
+                        if(t->children[1].children[0].children[0].id == TK_INT){
+                            printf("%s\tint\t%s\t%d",tempToken->lexeme,currFunc,offset);
+                            offset+=4;
+                            return offset;
+                        else{
+                            printf("%s\treal\t%s\t%d",tempToken->lexeme,currFunc,offset);
+                            offset+=2;
+                            return offset;
+                        }
+                    }else{
+                        tempToken = t->children[1].children[0].children[1].token;
+                                type = findRecType(recordTable,tempToken->lexeme);
+                        tempToken = t->children[2].token;
+                        addVariable(symbolTable,tempToken->lexeme,type);
+                        printf("%s\t",tempToken->lexeme);
+
+                        printf("%s\t%d",currFunc,offset);
+
+                    }
+                }
+                    }
+        }else{
+            int i;
+            for(i=0;i<t->numChildren,i++){
+                offset = printSymbolTableHelper(&t->children[i],symbolTable,currFunc,offset);
+            }
+        }
+    }
+    return offset;
+}
+*/
 
 int childIdToIndex(astNode *parent, int id){
     int i;
@@ -10,9 +101,8 @@ int childIdToIndex(astNode *parent, int id){
     }
     return -1;
 }
-int recordTypeCounter = 1;
 
-bool populateRecordTable(astNode *t, recHashTable *recordTable)
+void populateRecordTable(astNode *t, recHashTable *recordTable)
 {
     tokenInfo tempToken;
 
@@ -23,7 +113,7 @@ bool populateRecordTable(astNode *t, recHashTable *recordTable)
             tempToken = t->children[1].token;
             if(findRecType(recordTable,tempToken.lexeme) != -1){
                 printf("Line no. %lu : Redeclaration of record with name %s.\n",tempToken.lineNumber,tempToken.lexeme);
-                return false;
+                semantic_flag =false;
             }
 
             astNode temp = t->children[2];
@@ -56,12 +146,27 @@ bool populateRecordTable(astNode *t, recHashTable *recordTable)
                 populateRecordTable(&t->children[i], recordTable);
         }
     }
-    return true;
+    //return true;
 
 }
 
+void addVarHashTable(varHashTable *dest,varHashTable *src){
+    int i;
+    variableTable *temp;
+    for(i=0;i<VARIABLES_SIZE;i++){
+        temp = src->array[i];
+        while(temp != NULL){
+            if(findVariableType(dest,temp->name) != -1){
+                semantic_flag = false;
+            }else{
+                addVariable(dest,temp->name,temp->type);
+            }
+            temp=temp->next;
+        }
+    }
+}
 
-bool populateGlobalTable(astNode *t, varHashTable *globals,recHashTable *recordTable)
+void populateGlobalTable(astNode *t, varHashTable *globals,recHashTable *recordTable)
 {
 
     tokenInfo tempToken;
@@ -87,7 +192,7 @@ bool populateGlobalTable(astNode *t, varHashTable *globals,recHashTable *recordT
                 if(findVariableType(globals,tempToken.lexeme) != -1)
                 {
                     printf("Line No. %lu : Redeclaration of identifier with name %s.\n",tempToken.lineNumber,tempToken.lexeme);
-                    return false;
+                    semantic_flag = false;
                 }
                 addVariable(globals,tempToken.lexeme,type);
             }
@@ -99,11 +204,11 @@ bool populateGlobalTable(astNode *t, varHashTable *globals,recHashTable *recordT
                 populateGlobalTable(&t->children[i], globals,recordTable);
         }
     }
-    return true;
+    //return true;
 
 }
 
-bool populateLocalTable(astNode *t, varHashTable *local,recHashTable *recordTable)
+void populateLocalTable(astNode *t, varHashTable *local,recHashTable *recordTable,varHashTable *global)
 {
     tokenInfo tempToken;
     if(!isTerm(t->id))
@@ -127,8 +232,15 @@ bool populateLocalTable(astNode *t, varHashTable *local,recHashTable *recordTabl
                 tempToken = t->children[2].token;
                 if(findVariableType(local,tempToken.lexeme) != -1)
                 {
+                    semantic_flag = false;
                     printf("Line No. %lu : Redeclaration of identifier with name %s.\n",tempToken.lineNumber,tempToken.lexeme);
-                    return false;
+
+                }
+                if(findVariableType(global,tempToken.lexeme) != -1)
+                {
+                    semantic_flag = false;
+                    printf("Line No. %lu : Redeclaration of identifier with name %s.\n",tempToken.lineNumber,tempToken.lexeme);
+
                 }
                 addVariable(local,tempToken.lexeme,type);
             }
@@ -137,10 +249,10 @@ bool populateLocalTable(astNode *t, varHashTable *local,recHashTable *recordTabl
         {
             int i;
             for(i = 0; i < t->numChildren; i++)
-                populateLocalTable(&t->children[i], local,recordTable);
+                populateLocalTable(&t->children[i], local,recordTable, global);
         }
     }
-    return true;
+    //return true;
 
 }
 
@@ -168,6 +280,22 @@ int compareVarHashTables(varHashTable *t1,varHashTable *t2){
     return 1;
 }
 
+int getFuncLineNumber(funcHashTable *functionTable,char *name){
+    int k = getKeyFunction(name);
+    if(functionTable->array[key]==NULL)
+        return -1;
+    else{
+        tempFunc=functionTable->array[key];
+        while(tempFunc!=NULL){
+            if(!strcmp(tempFunc->name,name)){
+                return tempFunc->lineNum;
+            }
+            tempFunc= tempFunc->next;
+        }
+        return -1;
+    }
+}
+
 int functionOrder(funcHashTable *funcs, char *callee, char *caller){
     int f1,f2;
     f1 = getFuncLineNumber(funcs,callee);
@@ -185,7 +313,7 @@ int functionOrder(funcHashTable *funcs, char *callee, char *caller){
 }
 
 void populateFunctionTable(astNode *t, funcHashTable *functionTable, recHashTable* recordTable){
-    
+
     if(!isTerm(t->id))
     {
         if(t->id == function)
@@ -196,6 +324,7 @@ void populateFunctionTable(astNode *t, funcHashTable *functionTable, recHashTabl
             strcpy(name,t->children[nameChild].token.lexeme);
             varHashTable* inputList = (varHashTable*)malloc(sizeof(varHashTable));
             varHashTable* outputList = (varHashTable*)malloc(sizeof(varHashTable));
+            int k = t->children[nameChild].token.lineNumber;
 
             if(findFunc(functionTable,name)==true)
             {
@@ -203,56 +332,56 @@ void populateFunctionTable(astNode *t, funcHashTable *functionTable, recHashTabl
                 semantic_flag = false;
             }
 
-            astNode parameterListNode = t->children[childToIndex(t,input_par)].children[childIdToIndex(t,parameter_list)];
+            astNode parameterListNode = t->children[childIdToIndex(t,input_par)].children[childIdToIndex(t,parameter_list)];
 
             while(1)
             {
                 int formalParameterType;
-                
-                if(parameterListNode.children[childToIndex(t,dataType)].children[0].id==primitiveDatatype)
+
+                if(parameterListNode.children[childIdToIndex(t,dataType)].children[0].id==primitiveDatatype)
                 {
-                    formalParameterType = parameterListNode.children[childToIndex(t,dataType)].children[childToIndex(t,primitiveDatatype)].children[0].id;
-                    addVariable(inputList, parameterListNode.children[childToIndex(t,TK_ID)].token.lexeme, formalParameterType);
+                    formalParameterType = parameterListNode.children[childIdToIndex(t,dataType)].children[childIdToIndex(t,primitiveDatatype)].children[0].id;
+                    addVariable(inputList, parameterListNode.children[childIdToIndex(t,TK_ID)].token.lexeme, formalParameterType);
 
                 }
                 else
                 {
-                    formalParameterType = findRecType(recordTable, parameterListNode.children[childToIndex(t,dataType)].children[childToIndex(t,constructedDatatype)].children[childToIndex(t,TK_RECORDID)].token.lexeme);
-                    addVariable(inputList, parameterListNode.children[childToIndex(t,TK_ID)].token.lexeme, formalParameterType);
+                    formalParameterType = findRecType(recordTable, parameterListNode.children[childIdToIndex(t,dataType)].children[childIdToIndex(t,constructedDatatype)].children[childIdToIndex(t,TK_RECORDID)].token.lexeme);
+                    addVariable(inputList, parameterListNode.children[childIdToIndex(t,TK_ID)].token.lexeme, formalParameterType);
                 }
-                if(parameterListNode.children[childToIndex(t,remaining_list)].children[0].id == eps)
+                if(parameterListNode.children[childIdToIndex(t,remaining_list)].children[0].id == eps)
                     break;
-                parameterListNode = parameterListNode.children[childToIndex(t,remaining_list)].children[childToIndex(t,parameter_list)];
+                parameterListNode = parameterListNode.children[childIdToIndex(t,remaining_list)].children[childIdToIndex(t,parameter_list)];
             }
-            
-            astNode outputParameterNode = t->children[childToIndex(t,output_par)];
+
+            astNode outputParameterNode = t->children[childIdToIndex(t,output_par)];
             if(outputParameterNode.children[0].id == eps)
                 outputList=NULL;
             else
             {
-                parameterListNode = t->children[childToIndex(t,output_par)].children[childIdToIndex(t,parameter_list)];
+                parameterListNode = t->children[childIdToIndex(t,output_par)].children[childIdToIndex(t,parameter_list)];
                 while(1)
                 {
                     int formalParameterType;
-                    if(parameterListNode.children[childToIndex(t,dataType)].children[0].id==primitiveDatatype)
+                    if(parameterListNode.children[childIdToIndex(t,dataType)].children[0].id==primitiveDatatype)
                     {
-                        formalParameterType = parameterListNode.children[childToIndex(t,dataType)].children[childToIndex(t,primitiveDatatype)].children[0].id;
-                        addVariable(outputList, parameterListNode.children[childToIndex(t,TK_ID)].token.lexeme, formalParameterType);
+                        formalParameterType = parameterListNode.children[childIdToIndex(t,dataType)].children[childIdToIndex(t,primitiveDatatype)].children[0].id;
+                        addVariable(outputList, parameterListNode.children[childIdToIndex(t,TK_ID)].token.lexeme, formalParameterType);
 
                     }
                     else
                     {
-                        formalParameterType = findRecType(recordTable, parameterListNode.children[childToIndex(dataType)].children[childToIndex(constructedDatatype)].children[childToIndex(TK_RECORDID)].token.lexeme);
-                        addVariable(outputList, parameterListNode.children[childToIndex(TK_ID)].token.lexeme, formalParameterType);
+                        formalParameterType = findRecType(recordTable, parameterListNode.children[childIdToIndex(t,dataType)].children[childIdToIndex(t,constructedDatatype)].children[childIdToIndex(t,TK_RECORDID)].token.lexeme);
+                        addVariable(outputList, parameterListNode.children[childIdToIndex(t,TK_ID)].token.lexeme, formalParameterType);
                     }
 
-                    if(parameterListNode.children[childToIndex(t,remaining_list)].children[0].id == eps)
+                    if(parameterListNode.children[childIdToIndex(t,remaining_list)].children[0].id == eps)
                         break;
-                    parameterListNode = parameterListNode.children[childToIndex(t,remaining_list)].children[childToIndex(t,parameter_list)];
+                    parameterListNode = parameterListNode.children[childIdToIndex(t,remaining_list)].children[childIdToIndex(t,parameter_list)];
                 }
             }
 
-            addFunc(functionTable, name, inputList, outputList);
+            addFunc(functionTable, name, inputList, outputList,k);
         }
         else
         {
@@ -262,6 +391,5 @@ void populateFunctionTable(astNode *t, funcHashTable *functionTable, recHashTabl
         }
     }
 }
-
 
 

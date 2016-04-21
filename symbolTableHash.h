@@ -50,6 +50,7 @@ void removeRecTable(recHashTable* recordTable);
 
 typedef struct funcTable {
     char *name;
+    int lineNum;
     varHashTable* inputList;
     varHashTable* outputList;
     varHashTable* localVariables;
@@ -63,7 +64,7 @@ typedef struct funcHashTable{
 funcTable* tempFunc;
 
 void createFuncTable(funcHashTable* functionTable);
-void addFunc(funcHashTable* functionTable, char *name, varHashTable *inputList, varHashTable *outputList);
+void addFunc(funcHashTable* functionTable, char *name, varHashTable *inputList, varHashTable *outputList,int lineNum);
 bool findFunc(funcHashTable* functionTable, char *name); // searches for 'functionName'
 varHashTable *getFuncInputList(funcHashTable* functionTable, char *name);
 varHashTable *getFuncOutputList(funcHashTable* functionTable, char *name);

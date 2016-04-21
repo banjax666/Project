@@ -26,11 +26,12 @@ int semantic(astNode *ast, funcHashTable *functionTable, recHashTable *recordTab
             tempToken = ast->children[0].token;
             input = getFuncInputList(functionTable,tempToken.lexeme);
             output = getFuncOutputList(functionTable,tempToken.lexeme);
-            populateLocalTable(ast,&local,recordTable);
+            populateLocalTable(ast,&local,recordTable,globalTable);
 
-            addVarHashTable(&local,&globalTable);
-            addVarHashTable(&local,&input);
-            addVarHashTable(&local,&output);
+
+            addVarHashTable(&local,globalTable);
+            addVarHashTable(&local,input);
+            addVarHashTable(&local,output);
 
             for(i = 0; i < ast->numChildren; i++){
                 k=semantic(&ast->children[i], functionTable, recordTable,&local,tempToken.lexeme);
@@ -40,9 +41,8 @@ int semantic(astNode *ast, funcHashTable *functionTable, recHashTable *recordTab
 
         case mainFunction:
             createVarTable(&local);
-
-            addVarHashTable(&local,&globalTable);
-            populateLocalTable(ast,&local,recordTable);
+            populateLocalTable(ast,&local,recordTable,globalTable);
+            addVarHashTable(&local,globalTable);
 
             for(i = 0; i < ast->numChildren; i++){
                 k=semantic(&ast->children[i], functionTable, recordTable,&local,"main");
