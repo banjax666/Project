@@ -6,7 +6,7 @@
 CC = gcc
 CFLAGS =-g
 RM = rm -rf
-OBJECTS = driver.o lexer.o parser.o populateSymbolTable.o semanticAnalysis.o symbolTableHash.o
+OBJECTS = ast.o driver.o lexer.o parser.o populateSymbolTable.o semanticAnalysis.o symbolTableHash.o
 
 .PHONY: all
 all: toycompiler
@@ -14,12 +14,14 @@ all: toycompiler
 toycompiler:	$(OBJECTS)
 	$(CC) $(CFLAGS) $(OBJECTS) -o $@
 
+ast.o: parserDef.h lexer.h parser.h ast.h
 driver.o: lexer.h parser.h
 lexer.o: lexerDef.h lexer.h
 parser.o: parserDef.h lexerDef.h lexer.h
 populateSymbolTable.o: populateSymbolTable.h
 semanticAnalysis.o: semanticAnalysis.h
 symbolTableHash.o: symbolTableHash.h lexerDef.h parserDef.h
+
 
 .PHONY: install
 install:

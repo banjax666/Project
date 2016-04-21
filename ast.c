@@ -3,8 +3,9 @@
 #include <string.h>
 #include "parserDef.h"
 #include "lexer.h"
-#include "utils.h"
 #include "parser.h"
+#include "ast.h"
+#include "symbolTableHash.h"
 
 //COPIED DIRECTLY
 bool used(int tokenType) {
@@ -39,16 +40,16 @@ bool used(int tokenType) {
     }
 }
 
-void buildAST(parseTree *pTree, parseTree *ast) {
+void buildAST(parseTree *pTree, astNode *ast) {
 
     int parseTreeCounter=0, astCounter=0;
     ast->numChildren=0;
-    for(parseTreeCounter = 0; parseTreeCounter < p->numChildren; parseTreeCounter++)
+    for(parseTreeCounter = 0; parseTreeCounter < pTree->numChildren; parseTreeCounter++)
         if( (isTerm(pTree->id)==0) || used(pTree->children[parseTreeCounter].id))
             ast->numChildren++;
 
-    ast->children = (parseTree *)malloc(ast->numChildren * sizeof(parseTree));
-    for(parseTreeCounter=0;parseTreeCounter<p->numChildren;++parseTreeCounter) {
+    ast->children = (astNode *)malloc(ast->numChildren * sizeof(astNode));
+    for(parseTreeCounter=0;parseTreeCounter<pTree->numChildren;++parseTreeCounter) {
 
         ast->children[astCounter].parentId = ast->id;
 
@@ -57,14 +58,14 @@ void buildAST(parseTree *pTree, parseTree *ast) {
             ast->children[astCounter].id = pTree->children[parseTreeCounter].id;
             strcpy(ast->children[astCounter].token.tokenType, pTree->children[parseTreeCounter].token.tokenType);
             strcpy(ast->children[astCounter].token.lexeme, pTree->children[parseTreeCounter].token.lexeme);
-            ast->children[astCounter].token.lineNumber = pTre->children[parseTreeCounter].token.lineNumber;
+            ast->children[astCounter].token.lineNumber = pTree->children[parseTreeCounter].token.lineNumber;
             astCounter++;
 
         }
         else { 
 
             ast->children[astCounter].id = pTree->children[parseTreeCounter].id;
-            createAbstractSyntaxTree(&pTree->children[parseTreeCounter], &ast->children[astCounter]);
+            buildAST(&pTree->children[parseTreeCounter], &ast->children[astCounter]);
             astCounter++;
         }
 
@@ -81,4 +82,179 @@ void setSTPointers(astNode *ast,varHashTable *varTable){
     }
     for(i=0;i<ast->numChildren;++i)
         setSTPointers(&(ast->children[i]),varTable);
+}
+
+void printASTHelper(astNode* pTree, FILE* fp){
+    int i,len,templen;
+    char ch;
+
+
+    if(isTerm(pTree->id)==1){
+
+        if(pTree->id==eps){
+            // printf("eps");
+            // while(getchar()!='\n');
+            fprintf(fp,"eps");
+            for(i=0;i<30- strlen("eps");++i){
+                fprintf(fp," ");
+            }
+
+            fprintf(fp,"----");
+            for(i=0;i<10-strlen("----");++i){
+                fprintf(fp," ");
+            }
+            fprintf(fp,"----");
+            for(i=0;i<20-strlen("----");++i){
+                fprintf(fp," ");
+            }
+            fprintf(fp,"----");
+            for(i=0;i<10-strlen("----");++i){
+                fprintf(fp," ");
+            }
+
+            fprintf(fp,"%s",idToName(pTree->parentId));
+            for(i=0;i<30 - strlen(idToName(pTree->parentId));++i){
+                fprintf(fp," ");
+            }
+            //leaf node. Hence, yes.
+            fprintf(fp,"Yes");
+            for(i=0;i<20- strlen("Yes");++i){
+                fprintf(fp," ");
+            }
+            fprintf(fp,"----");
+            for(i=0;i<30- strlen("----");++i){
+                fprintf(fp," ");
+            }
+            fprintf(fp,"\n");
+
+        }
+        else{
+
+            // printf("%s",pTree->token.lexeme);
+            // while(getchar()!='\n');
+            fprintf(fp,"%s",pTree->token.lexeme);
+            for(i=0;i<30- strlen(pTree->token.lexeme);++i){
+                fprintf(fp," ");
+            }
+
+            fprintf(fp,"%lu",pTree->token.lineNumber);
+            char str[10];
+            sprintf(str, "%lu", pTree->token.lineNumber);
+            for(i=0;i<10-strlen(str);++i){
+                fprintf(fp," ");
+            }
+
+            fprintf(fp,"%s",pTree->token.tokenType);
+            for(i=0;i<20- strlen(pTree->token.tokenType);++i){
+                fprintf(fp," ");
+            }
+
+            if(strcmp(pTree->token.tokenType,"TK_RNUM")==0 ||  strcmp(pTree->token.tokenType,"TK_NUM")==0){
+                fprintf(fp,"%s",pTree->token.lexeme);
+                for(i=0;i<10- strlen(pTree->token.lexeme);++i){
+                    fprintf(fp," ");
+                }
+            }
+            else{
+                fprintf(fp,"----");
+                for(i=0;i<10- strlen("----");++i){
+                    fprintf(fp," ");
+                }
+
+            }
+
+            fprintf(fp,"%s",idToName(pTree->parentId));
+            len = strlen(idToName(pTree->parentId));
+            templen= 30-len;
+            for(i=0;i<templen;++i){
+                fprintf(fp," ");
+            }
+
+            //leaf node. Hence, yes.
+            fprintf(fp,"Yes");
+            for(i=0;i<20- strlen("Yes");++i){
+                fprintf(fp," ");
+            }
+
+            fprintf(fp,"----");
+            for(i=0;i<30- strlen("----");++i){
+                fprintf(fp," ");
+            }
+
+
+        }
+
+        fprintf(fp,"\n");
+    }
+    else{
+        // printf("%s",idToName(pTree->id));
+        // 	while(getchar()!='\n');
+        fprintf(fp,"----");
+        for(i=0;i<30- strlen("----");++i){
+            fprintf(fp," ");
+        }
+
+        fprintf(fp,"----");
+        for(i=0;i<10-strlen("----");++i){
+            fprintf(fp," ");
+        }
+        fprintf(fp,"----");
+        for(i=0;i<20-strlen("----");++i){
+            fprintf(fp," ");
+        }
+        fprintf(fp,"----");
+        for(i=0;i<10-strlen("----");++i){
+            fprintf(fp," ");
+        }
+
+        fprintf(fp,"%s",idToName(pTree->parentId));
+        for(i=0;i<30- strlen(idToName(pTree->parentId));++i){
+            fprintf(fp," ");
+        }
+
+        //Not leaf node. Hence, no.
+        fprintf(fp,"No");
+        for(i=0;i<20- strlen("No");++i){
+            fprintf(fp," ");
+        }
+        fprintf(fp,"%s",idToName(pTree->id));
+
+        len=strlen(idToName(pTree->id));
+        for(i=0;i<30-len;++i){
+            fprintf(fp," ");
+        }
+        fprintf(fp,"\n");
+
+        for(i=0;i<pTree->numChildren;++i){
+            printASTHelper(&pTree->children[i], fp);
+        }
+
+    }
+    fflush(fp);
+}
+
+void printAST(astNode PT, char *parseTreeDisplayFile){
+    printf("Outfile name: %s\n",parseTreeDisplayFile);
+    int ch;
+    FILE* fp;
+    if(strcmp(parseTreeDisplayFile,"console")==0)
+        fp=stdout;
+    else
+        fp= fopen(parseTreeDisplayFile, "w");
+    if(fp==NULL){
+        printf("File open error or console error: %s",parseTreeDisplayFile);
+        return;
+    }
+    //changed, for aesthetic purposes (only number of spaces changed, for better formatting)
+    fprintf(fp, "lexemeCurrentNode             lineno    token               valOfNum  parentNodeSymbol              isLeafNode(yes/no)  NodeSymbol\n\n\n");
+
+    printASTHelper(&PT, fp);
+}
+
+void getNumNodesAST(astNode ast, int *nodes){
+    *nodes= (*nodes) + 1;
+    int i;
+    for(i=0; i<ast.numChildren ; ++i){
+        getNumNodesAST(ast.children[i], nodes);
+    }
 }

@@ -29,6 +29,7 @@ void createParseTable(firstset fi,followset f,grammar G,parseTable PT);
 int parseInputSourceCode(FILE *fpSource, buffer B, buffersize k, tokenInfo *tokenCurrent, parseTree* root, grammar G, table PT);
 void printParseTreeHelper(parseTree* pTree, FILE* fp);
 void printParseTree(parseTree PT, char *outfile);
+void getNumNodesParseTree(parseTree p, int *nodes);
 void traverse(stack_struct* stack);
 
 

@@ -17,3 +17,4 @@ utils.h
 semanticAnalysis.h
 semanticAnalysis.c
 symbolTableHash.h
+ast.h

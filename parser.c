@@ -803,14 +803,26 @@ void printParseTreeHelper(parseTree* pTree, FILE* fp){
 void printParseTree(parseTree PT, char *parseTreeDisplayFile){
 	printf("Outfile name: %s\n",parseTreeDisplayFile);
 	int ch;
-	FILE* fp  = fopen(parseTreeDisplayFile, "w");
+    FILE* fp;
+    if(strcmp(parseTreeDisplayFile,"console")==0)
+        fp=stdout;
+    else
+        fp= fopen(parseTreeDisplayFile, "w");
 	if(fp==NULL){
-		printf("File open error: %s",parseTreeDisplayFile);
+        printf("File open error or console error: %s",parseTreeDisplayFile);
 		return;
 	}
 	//changed, for aesthetic purposes (only number of spaces changed, for better formatting)
 	fprintf(fp, "lexemeCurrentNode             lineno    token               valOfNum  parentNodeSymbol              isLeafNode(yes/no)  NodeSymbol\n\n\n");	
 	
 	printParseTreeHelper(&PT, fp);
+}
+
+void getNumNodesParseTree(parseTree p, int *nodes){
+    *nodes= (*nodes) + 1;
+    int i;
+    for(i=0; i<p.numChildren ; ++i){
+        getNumNodesParseTree(p.children[i], nodes);
+    }
 }
 

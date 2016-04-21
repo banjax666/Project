@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include "lexer.h"
 #include "parser.h"
+#include "ast.h"
 
 bool semantic_flag = true;
 int main(int argc, char *argv[]){
@@ -16,6 +17,8 @@ int main(int argc, char *argv[]){
     
 	buffersize k = 1000; //arbitary buffer size   
 	buffer B= (char*)malloc(k*sizeof(char));
+    int astNodes=0, parseTreeNodes=0;
+    unsigned long astMem, pTreeMem;
 	
 	if(argc != 3) {
         printf("Please run command as: $./stage1exe testcase.txt parsetreeOutFile.txt\n");
@@ -39,6 +42,7 @@ int main(int argc, char *argv[]){
 	parseTable PT;
 	int parseReturn; 
 	parseTree root;
+    astNode astRoot;
    
     tokenInfo tokenCurrent;
 
@@ -67,27 +71,31 @@ int main(int argc, char *argv[]){
 
 	int z=0;
 	int flag=0;
+    int astFlag =0;
 	
 	do{
 		printf("\nType option:\n\n");
 		printf("0:Quit\n");
-		printf("1:remove comments\n");
-		printf("2:print list of tokens\n");
-		printf("3:parse\n");
-		printf("4:print parse tree\n");
+        printf("1:print list of tokens\n");
+        printf("2:parse, verify syntactic correctness and display parse tree\n");
+        printf("3:print AST to console\n");
+        printf("4:display memory usage of parse tree and AST\n");
+        printf("5:display symbol table\n");
+        printf("6:verify syntactic and semantic correctness\n");
+        printf("7:produce assembly code in .asm file\n");
 		scanf("%d",&z);
 		switch(z){
 			case 0:
 				break;
-			case 1:
-				commentRemover(fpSource);
-				printf("1 done");
-				break;
-			case 2:
+//			case 1:
+//				commentRemover(fpSource);
+//				printf("1 done");
+//				break;
+            case 1:
 				printAllTokens(fpSource, B,k);
-				printf("2 done");				
+                printf("1 done");
 				break;
-			case 3:
+            case 2:
 				updateFilePointer();
 				getNextTokenHelper(fpSource, B, k, &tokenCurrent);
 				parseReturn =  parseInputSourceCode(fpSource, B, k, &tokenCurrent, &root, G , PT);
@@ -95,18 +103,63 @@ int main(int argc, char *argv[]){
 				printf("Parsing routine complete\n");
 				fseek(fpSource,0,SEEK_SET);
 				flag=1;
-				printf("3 done");
+                printParseTree(root,"console");
+                printf("2 done");
 				break;
-			case 4:
+            case 3:
 				if(flag==0){
-					printf("Please run the parse option first\n");
-					break;
+                    updateFilePointer();
+                    getNextTokenHelper(fpSource, B, k, &tokenCurrent);
+                    parseReturn =  parseInputSourceCode(fpSource, B, k, &tokenCurrent, &root, G , PT);
+                    updateFilePointer();
+                    printf("Parsing routine complete\n");
+                    fseek(fpSource,0,SEEK_SET);
+                    flag=1;
 				}
-
-				printParseTree(root, argv[2]);
-				printf("Printed to file: %s\n",argv[2]);
-				printf("4 done");
+                if(parseReturn!=0){
+                    printf("compilation failed, syntactic errors displayed. Cannot generate AST\n");
+                    break;
+                }
+                else{
+                    buildAST(&root,&ast);
+                    printAST(ast,"console");
+                    astFlag=1;
+                }
+                printf("3 done");
 				break;
+            case 4:
+                if(astFlag==0){
+                    if(flag==0){
+                        updateFilePointer();
+                        getNextTokenHelper(fpSource, B, k, &tokenCurrent);
+                        parseReturn =  parseInputSourceCode(fpSource, B, k, &tokenCurrent, &root, G , PT);
+                        updateFilePointer();
+                        printf("Parsing routine complete\n");
+                        fseek(fpSource,0,SEEK_SET);
+                        flag=1;
+                    }
+                    if(parseReturn!=0){
+                        printf("compilation failed, syntactic errors displayed. Cannot generate AST\n");
+                        break;
+                    }
+                    else{
+                        buildAST(&root,&ast);
+                        astFlag=1;
+                    }
+                }
+                getNumNodesAST(astRoot, &astNodes);
+                getNumNodesParseTree(root, &parseTreeNodes);
+                astMem=sizeof(astNode) * astNodes;
+                pTreeMem=sizeof(parseTree) * parseTreeNodes;
+                printf("Parse Tree  Number of Nodes=%d  Allocated Memory=%lu Bytes",parseTreeNodes,pTreeMem);
+                printf("AST         Number of Nodes=%d  Allocated Memory=%lu Bytes",astNodes,astMem);
+
+            case 5:
+                //SYMBOL TABLE!!
+            case 6:
+
+
+
 		}
 	}while(z);
 	return 0;
