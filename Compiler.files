@@ -15,3 +15,5 @@ symbolTables.c
 symbolTables.h
 utils.c
 utils.h
+semanticAnalysis.h
+semanticAnalysis.c
