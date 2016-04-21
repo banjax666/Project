@@ -1,8 +1,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <stdbool.h>
 #include "symbolTableHash.h"
+#include "lexerDef.h"
+#include "parserDef.h"
 
 int getKeyVariable(char *name){
     int sum = 0;
@@ -33,19 +34,17 @@ int getKeyFunction(char *name){
     sum=sum%FUNCTIONS_SIZE;
     return sum;
 }
-
 void createVarTable(varHashTable* varTable){
-	int i;
-	for(i=0;i<VARIABLES_SIZE;i++){
-		varTable->array[i]=NULL;
-	}
+    int i;
+    for(i=0;i<VARIABLES_SIZE;i++){
+        varTable->array[i]=NULL;
+    }
 }
 
 void addVariable(varHashTable* varTable , char *name, int type){
-
     key = getKeyVariable(name);
     variableTable* newNode = (variableTable *)malloc(sizeof(variableTable));
-    newNode->name=(char *)malloc(sizeof(name));
+    newNode->name=(char *)malloc((strlen(name) + 1) * sizeof(char));
     newNode->type = type;
     strcpy(newNode->name,name);
     newNode->next = NULL;
@@ -77,6 +76,28 @@ int findVariableType(varHashTable* varTable, char *name){
     }
 }
 
+variableTable* getVarHashTableEntry(varHashTable* varTable,char* name){
+    key = getKeyVariable(name);
+    if(varTable->array[key]==NULL)
+        return NULL;
+    else{
+        tempVar=varTable->array[key];
+        while(tempVar!=NULL){
+            if(!strcmp(tempVar->name,name)){
+                return tempVar;
+            }
+            tempVar= tempVar->next;
+        }
+        return NULL;
+    }
+}
+
+int typeIntOrReal(int type){
+    if(type)
+        return TK_RNUM;
+    else return TK_NUM;
+}
+
 void removeVariableTable(varHashTable* varTable){
     int i;
     for(i=0;i<VARIABLES_SIZE;++i){
@@ -91,17 +112,17 @@ void removeVariableTable(varHashTable* varTable){
 }
 
 void createRecTable(recHashTable* recordTable){
-	int i;
-	for(i=0;i<RECORDS_SIZE;i++){
-		recordTable->array[i]=NULL;
-	}
+    int i;
+    for(i=0;i<RECORDS_SIZE;i++){
+        recordTable->array[i]=NULL;
+    }
 }
 
 void addRec(recHashTable* recordTable, char *name, varHashTable *fields, int type){
 
     key = getKeyRecord(name);
     recTable *new = (recTable *)malloc(sizeof(recTable));
-    new->name = (char *)malloc(sizeof(char));
+    new->name = (char *)malloc((strlen(name) + 1) * sizeof(char));
     recTable *temp;
 
     new->type = type;
@@ -160,6 +181,21 @@ varHashTable* getRecFields(recHashTable* recordTable, char *name){
     return NULL;
 }
 
+char* getRecordName(recHashTable* recordTable, int type){
+
+    int i;
+    for(i=0;i<RECORDS_SIZE;i++){
+        tempRec=recordTable->array[i];
+        while(tempRec != NULL){
+            if(tempRec->type == type){
+                return tempRec->name;
+            }
+            tempRec = tempRec->next;
+        }
+    }
+
+}
+
 void removeRecTable(recHashTable* recordTable){
 
     int i=0;
@@ -183,20 +219,20 @@ void removeRecTable(recHashTable* recordTable){
 }
 
 void createFuncTable(funcHashTable* functionTable){
-	int i;
-	for(i=0;i<FUNCTIONS_SIZE;i++){
-		functionTable->array[i]=NULL;
-	}
+    int i;
+    for(i=0;i<FUNCTIONS_SIZE;i++){
+        functionTable->array[i]=NULL;
+    }
 }
 
-void addFunc(funcHashTable* functionTable, char *name, varHashTable *inputList, varHashTable *outputList){
-
+void addFunc(funcHashTable* functionTable, char *name, varHashTable *inputList, varHashTable *outputList,int lineNum){
     key = getKeyFunction(name);
     funcTable* newNode = (funcTable *)malloc(sizeof(funcTable));
-    newNode->name=(char *)malloc(sizeof(name));
+    newNode->name=(char *)malloc((strlen(name) + 1) * sizeof(char));
     strcpy(newNode->name,name);
     newNode->inputList=inputList;
     newNode->outputList=outputList;
+    newNode->lineNum = lineNum;
     newNode->next = NULL;
     if(functionTable->array[key]==NULL){
         functionTable->array[key]=newNode;
@@ -211,7 +247,7 @@ void addFunc(funcHashTable* functionTable, char *name, varHashTable *inputList, 
 
 }
 
-bool findFunc(funcHashTable *functionTable, char *name){
+bool findFunc(funcHashTable* functionTable, char *name){
     key = getKeyFunction(name);
     if(functionTable->array[key]==NULL)
         return false;
@@ -227,7 +263,7 @@ bool findFunc(funcHashTable *functionTable, char *name){
     }
 }
 
-varHashTable* getFuncInputList(funcHashTable *functionTable, char *name){
+varHashTable* getFuncInputList(funcHashTable* functionTable, char *name){
     key = getKeyFunction(name);
     if(functionTable->array[key]==NULL)
         return NULL;
@@ -243,7 +279,7 @@ varHashTable* getFuncInputList(funcHashTable *functionTable, char *name){
     }
 }
 
-varHashTable* getFuncOutputList(funcHashTable *functionTable, char *name){
+varHashTable* getFuncOutputList(funcHashTable* functionTable, char *name){
     key = getKeyFunction(name);
     if(functionTable->array[key]==NULL)
         return NULL;
@@ -259,7 +295,7 @@ varHashTable* getFuncOutputList(funcHashTable *functionTable, char *name){
     }
 }
 
-varHashTable* getFuncLocalVariables(funcHashTable *functionTable, char *name){
+varHashTable* getFuncLocalVariables(funcHashTable* functionTable, char *name){
     key = getKeyFunction(name);
     if(functionTable->array[key]==NULL)
         return NULL;
@@ -306,9 +342,4 @@ void removeFuncTable(funcHashTable* functionTable){
         }
     }
     free(functionTable);
-}
-
-int main(){
-
-	
 }

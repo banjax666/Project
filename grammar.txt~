@@ -1,0 +1,89 @@
+2 program ---> otherFunctions mainFunction
+3 mainFunction ---> TK_MAIN stmts TK_END
+2 otherFunctions ---> function otherFunctions
+1 otherFunctions ---> eps
+6 function ---> TK_FUNID input_par output_par TK_SEM stmts TK_END
+6 input_par ---> TK_INPUT TK_PARAMETER TK_LIST TK_SQL parameter_list TK_SQR
+6 output_par ---> TK_OUTPUT TK_PARAMETER TK_LIST TK_SQL parameter_list TK_SQR
+1 output_par ---> eps
+3 parameter_list ---> dataType TK_ID remaining_list
+1 dataType ---> primitiveDatatype
+1 dataType ---> constructedDatatype
+1 primitiveDatatype ---> TK_INT
+1 primitiveDatatype ---> TK_REAL
+2 constructedDatatype ---> TK_RECORD TK_RECORDID
+2 remaining_list ---> TK_COMMA parameter_list
+1 remaining_list ---> eps
+4 stmts ---> typeDefinitions declarations otherStmts returnStmt
+2 typeDefinitions ---> typeDefinition typeDefinitions
+1 typeDefinitions ---> eps
+5 typeDefinition ---> TK_RECORD TK_RECORDID fieldDefinitions TK_ENDRECORD TK_SEM
+3 fieldDefinitions ---> fieldDefinition fieldDefinition moreFields
+5 fieldDefinition ---> TK_TYPE primitiveDatatype TK_COLON TK_FIELDID TK_SEM
+2 moreFields ---> fieldDefinition moreFields
+1 moreFields ---> eps
+2 declarations ---> declaration declarations
+1 declarations ---> eps
+6 declaration ---> TK_TYPE dataType TK_COLON TK_ID global_or_not TK_SEM
+2 global_or_not ---> TK_COLON TK_GLOBAL
+1 global_or_not ---> eps
+2 otherStmts ---> stmt otherStmts
+1 otherStmts ---> eps
+1 stmt ---> assignmentStmt
+1 stmt ---> iterativeStmt
+1 stmt ---> conditionalStmt
+1 stmt ---> ioStmt
+1 stmt ---> funCallStmt
+4 assignmentStmt ---> singleOrRecId TK_ASSIGNOP arithmeticExpression TK_SEM
+2 singleOrRecId ---> TK_ID singleOrRecIdPrime
+2 singleOrRecIdPrime ---> TK_DOT TK_FIELDID
+1 singleOrRecIdPrime ---> eps
+7 funCallStmt ---> outputParameters TK_CALL TK_FUNID TK_WITH TK_PARAMETERS inputParameters TK_SEM
+4 outputParameters ---> TK_SQL idList TK_SQR TK_ASSIGNOP
+1 outputParameters ---> eps
+3 inputParameters ---> TK_SQL idList TK_SQR
+7 iterativeStmt ---> TK_WHILE TK_OP booleanExpression TK_CL stmt otherStmts TK_ENDWHILE
+8 conditionalStmt ---> TK_IF TK_OP booleanExpression TK_CL TK_THEN stmt otherStmts elsePart
+4 elsePart ---> TK_ELSE stmt otherStmts TK_ENDIF
+1 elsePart ---> TK_ENDIF
+5 ioStmt ---> TK_READ TK_OP singleOrRecId TK_CL TK_SEM
+5 ioStmt ---> TK_WRITE TK_OP all TK_CL TK_SEM
+1 allVar ---> var
+3 allVar ---> TK_ID TK_DOT TK_FIELDID
+2 arithmeticExpression ---> term expPrime
+3 expPrime ---> lowPrecedenceOperators term expPrime
+1 expPrime ---> eps
+2 term ---> factor termPrime
+3 termPrime ---> highPrecedenceOperators factor termPrime
+1 termPrime ---> eps
+3 factor ---> TK_OP arithmeticExpression TK_CL
+1 factor ---> all
+1 highPrecedenceOperators ---> TK_MUL
+1 highPrecedenceOperators ---> TK_DIV
+1 lowPrecedenceOperators ---> TK_PLUS
+1 lowPrecedenceOperators ---> TK_MINUS
+1 all ---> TK_NUM
+1 all ---> TK_RNUM
+2 all ---> TK_ID temp
+1 temp ---> eps
+2 temp ---> TK_DOT TK_FIELDID
+7 booleanExpression ---> TK_OP booleanExpression TK_CL logicalOp TK_OP booleanExpression TK_CL
+3 booleanExpression ---> var relationalOp var
+4 booleanExpression ---> TK_NOT TK_OP booleanExpression TK_CL
+1 var ---> TK_ID 
+1 var ---> TK_NUM
+1 var ---> TK_RNUM
+1 logicalOp ---> TK_AND
+1 logicalOp ---> TK_OR
+1 relationalOp ---> TK_LT
+1 relationalOp ---> TK_LE
+1 relationalOp ---> TK_EQ
+1 relationalOp ---> TK_GT
+1 relationalOp ---> TK_GE
+1 relationalOp ---> TK_NE
+3 returnStmt ---> TK_RETURN optionalReturn TK_SEM
+3 optionalReturn ---> TK_SQL idList TK_SQR
+1 optionalReturn ---> eps
+2 idList ---> TK_ID more_ids
+2 more_ids ---> TK_COMMA idList
+1 more_ids ---> eps

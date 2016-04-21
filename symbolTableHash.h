@@ -1,9 +1,11 @@
 #ifndef SYMBOLTABLEHASH_H
 #define SYMBOLTABLEHASH_H
 
+#include<stdbool.h>
 #define VARIABLES_SIZE 37
 #define RECORDS_SIZE 37
 #define FUNCTIONS_SIZE 37
+#define MAX_ID_SIZE 100
 
 typedef struct variableTable{
     char *name;
@@ -22,6 +24,7 @@ void createVarTable(varHashTable* varTable);
 void addVariable(varHashTable* varTable , char *name, int type);
 int findVariableType(varHashTable* varTable, char *name);//returns -1 if no variable, else variable type
 void removeVariableTable(varHashTable* varTable);
+int typeIntOrReal(int type);
 
 
 typedef struct recTable {
@@ -31,6 +34,9 @@ typedef struct recTable {
     struct recTable *next;
 } recTable;
 
+
+recTable* tempRec;
+
 typedef struct recHashTable{
     recTable* array[RECORDS_SIZE];
 } recHashTable;
@@ -39,10 +45,12 @@ void createRecTable(recHashTable* recordTable);
 void addRec(recHashTable* recordTable, char *name, varHashTable *fields, int type);
 int findRecType(recHashTable* recordTable, char *name);
 varHashTable* getRecFields(recHashTable* recordTable, char *name);
+char* getRecordName(recHashTable* recordTable, int type);
 void removeRecTable(recHashTable* recordTable);
 
 typedef struct funcTable {
     char *name;
+    int lineNum;
     varHashTable* inputList;
     varHashTable* outputList;
     varHashTable* localVariables;
@@ -56,7 +64,7 @@ typedef struct funcHashTable{
 funcTable* tempFunc;
 
 void createFuncTable(funcHashTable* functionTable);
-void addFunc(funcHashTable* functionTable, char *name, varHashTable *inputList, varHashTable *outputList);
+void addFunc(funcHashTable* functionTable, char *name, varHashTable *inputList, varHashTable *outputList,int lineNum);
 bool findFunc(funcHashTable* functionTable, char *name); // searches for 'functionName'
 varHashTable *getFuncInputList(funcHashTable* functionTable, char *name);
 varHashTable *getFuncOutputList(funcHashTable* functionTable, char *name);

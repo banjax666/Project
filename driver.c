@@ -12,7 +12,7 @@
 int main(int argc, char *argv[]){
 
 	FILE* fpSource;
-	
+    bool semantic_flag = true;
 	buffersize k = 1000; //arbitary buffer size   
 	buffer B= (char*)malloc(k*sizeof(char));
 	

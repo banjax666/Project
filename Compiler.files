@@ -1,3 +1,4 @@
+ast.c
 codegen.c
 driver.c
 lexer.c
@@ -9,8 +10,10 @@ parserDef.h
 populateSymbolTable.c
 populateSymbolTable.h
 symbolTableHash.c
-symboltablehash.h
 symbolTables.c
 symbolTables.h
 utils.c
 utils.h
+semanticAnalysis.h
+semanticAnalysis.c
+symbolTableHash.h
