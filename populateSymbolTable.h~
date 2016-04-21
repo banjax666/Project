@@ -13,7 +13,7 @@
 #include "parserDef.h"
 
 void printSymbolTable(parseTree *t,varHashTable *symbolTable,recHashTable *recs);
-int printSymbolTableHelper(parseTree *t,varHashTable *symbolTable,char *currFunc,int offset,recHashTable *recs);
+int printSymbolTableHelper(parseTree *t,varHashTable *symbolTable,char *currFunc,int offset,recHashTable *recs)
 void populateRecordTable(astNode *t, recHashTable *recordTable);
 void populateGlobalTable(astNode *t, varHashTable *globals,recHashTable *recordTable);
 void populateLocalTable(astNode *t, varHashTable *local,recHashTable *recordTable,varHashTable *global);

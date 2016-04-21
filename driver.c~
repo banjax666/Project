@@ -205,11 +205,8 @@ int main(int argc, char *argv[]){
                             astFlag=1;
                         }
                     }
-	if(recordTableFlag == 0){
             createRecTable(recs);
             populateRecordTable(astRoot,recs);
-		recordTableFlag = 1;	
-	}
             createFuncTable(funcs);
             populateFunctionTable(astRoot,funcs,recs);
             createVarTable(global);
