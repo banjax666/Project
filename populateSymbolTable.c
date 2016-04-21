@@ -14,15 +14,15 @@ int recordTypeCounter = 1;
 
 bool populateRecordTable(parseTree *t, recHashTable *recordTable)
 {
-    tokenInfo *tempToken;
+    tokenInfo tempToken;
 
     if(!isTerm(t->id))
     {
         if(t->id == typeDefinition)
         {
             tempToken = t->children[1].token;
-            if(findRecType(recordTable,tempToken->lexeme) != -1){
-                printf("Line no. %lu : Redeclaration of record with name %s.\n",tempToken->lineNumber,tempToken->lexeme);
+            if(findRecType(recordTable,tempToken.lexeme) != -1){
+                printf("Line no. %lu : Redeclaration of record with name %s.\n",tempToken.lineNumber,tempToken.lexeme);
                 return false;
             }
 
@@ -32,22 +32,22 @@ bool populateRecordTable(parseTree *t, recHashTable *recordTable)
 
             type = temp.children[0].children[1].children[0].id - TK_NUM;
             tempToken = temp.children[0].children[2].token;
-            addVariable(&fields,tempToken->lexeme,type);
+            addVariable(&fields,tempToken.lexeme,type);
             type = temp.children[1].children[1].children[0].id - TK_NUM;
             tempToken = temp.children[1].children[2].token;
-            addVariable(&fields,tempToken->lexeme,type);
+            addVariable(&fields,tempToken.lexeme,type);
 
             temp = temp.children[2];
             while(!isTerm(temp.children[0].id) && temp.children[0].id != eps)
             {
                 type = temp.children[0].children[1].children[0].id - TK_NUM;
                 tempToken = temp.children[0].children[2].token;
-                addVariable(&fields,tempToken->lexeme,type);
+                addVariable(&fields,tempToken.lexeme,type);
                 temp = temp.children[1];
             }
             recordTypeCounter++;
             tempToken = t->children[1].token;
-            addRec(recordTable,tempToken->lexeme,&fields,recordTypeCounter);
+            addRec(recordTable,tempToken.lexeme,&fields,recordTypeCounter);
         }
         else
         {
@@ -80,16 +80,16 @@ bool populateGlobalTable(parseTree *t, varHashTable *globals,recHashTable *recor
                 else
                 {
                     tempToken = t->children[1].children[0].children[1].token;
-                    type = findRecType(recordTable,tempToken->lexeme);
+                    type = findRecType(recordTable,tempToken.lexeme);
                 }
 
                 tempToken = t->children[2].token;
-                if(findVariableType(globals,tempToken->lexeme) != -1)
+                if(findVariableType(globals,tempToken.lexeme) != -1)
                 {
-                    printf("Line No. %lu : Redeclaration of identifier with name %s.\n",tempToken->lineNumber,tempToken->lexeme);
+                    printf("Line No. %lu : Redeclaration of identifier with name %s.\n",tempToken.lineNumber,tempToken.lexeme);
                     return false;
                 }
-                addVariable(globals,tempToken->lexeme,type);
+                addVariable(globals,tempToken.lexeme,type);
             }
         }
         else
@@ -121,16 +121,16 @@ bool populateLocalTable(parseTree *t, varHashTable *local,recHashTable *recordTa
                 else
                 {
                     tempToken = t->children[1].children[0].children[1].token;
-                    type = findRecType(recordTable,tempToken->lexeme);
+                    type = findRecType(recordTable,tempToken.lexeme);
                 }
 
                 tempToken = t->children[2].token;
-                if(findVariableType(local,tempToken->lexeme) != -1)
+                if(findVariableType(local,tempToken.lexeme) != -1)
                 {
-                    printf("Line No. %lu : Redeclaration of identifier with name %s.\n",tempToken->lineNumber,tempToken->lexeme);
+                    printf("Line No. %lu : Redeclaration of identifier with name %s.\n",tempToken.lineNumber,tempToken.lexeme);
                     return false;
                 }
-                addVariable(local,tempToken->lexeme,type);
+                addVariable(local,tempToken.lexeme,type);
             }
         }
         else
