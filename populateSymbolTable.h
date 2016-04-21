@@ -18,7 +18,7 @@ void populateRecordTable(astNode *t, recHashTable *recordTable);
 void populateGlobalTable(astNode *t, varHashTable *globals,recHashTable *recordTable);
 void populateLocalTable(astNode *t, varHashTable *local,recHashTable *recordTable,varHashTable *global);
 int functionOrder(funcHashTable *funcs, char *callee, char *caller);
-int compareVarHashTables(varHashTable *t1,varHashTable *t2);
+int compareVarHashTables(varHashTable *t1,varHashTable *t2,int lineNum);
 int childIdToIndex(astNode *parent, int id);
 void addVarHashTable(varHashTable *dest,varHashTable *src);
 int getFuncLineNumber(funcHashTable *funcs,char *name);

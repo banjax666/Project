@@ -44,9 +44,9 @@ int main(int argc, char *argv[]){
     int parseReturn;
     parseTree root;
     astNode astRoot;
-    varHashTable temp,global;
-    recHashTable recs;
-    funcHashTable funcs;
+    varHashTable *temp,*global;
+    recHashTable *recs;
+    funcHashTable *funcs;
     tokenInfo tokenCurrent;
 
     int i,j;
@@ -180,10 +180,10 @@ int main(int argc, char *argv[]){
                         astFlag=1;
                     }
                 }
-        createVarTable(&temp);
+        createVarTable(temp);
     if(recordTableFlag == 0){
-            createRecTable(&recs);
-            populateRecordTable(&astRoot,&recs);
+            createRecTable(recs);
+            populateRecordTable(&astRoot,recs);
         recordTableFlag = 1;
     }
         //printSymbolTable(astRoot,temp,recs);
@@ -210,18 +210,18 @@ int main(int argc, char *argv[]){
                         }
                     }
     if(recordTableFlag == 0){
-            createRecTable(&recs);
-            populateRecordTable(&astRoot,&recs);
+            createRecTable(recs);
+            populateRecordTable(&astRoot,recs);
         recordTableFlag = 1;
     }
-            createFuncTable(&funcs);
-            populateFunctionTable(&astRoot,&funcs,&recs);
-            createVarTable(&global);
-            populateGlobalTable(&astRoot,&global,&recs);
-            semantic(&astRoot,&funcs,&recs,&global,"");
+            createFuncTable(funcs);
+            populateFunctionTable(&astRoot,funcs,recs);
+            createVarTable(global);
+            populateGlobalTable(&astRoot,global,recs);
+            semantic(&astRoot,funcs,recs,global,"");
             symFlag = 1;
         }else{
-            semantic(&astRoot,&funcs,&recs,&global,"");
+            semantic(&astRoot,funcs,recs,global,"");
         }
         break;
 

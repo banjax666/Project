@@ -36,6 +36,7 @@ int getKeyFunction(char *name){
 }
 void createVarTable(varHashTable* varTable){
     int i;
+    varTable = (varHashTable*) malloc (sizeof(varHashTable));
     for(i=0;i<VARIABLES_SIZE;i++){
         varTable->array[i]=NULL;
     }
@@ -113,6 +114,7 @@ void removeVariableTable(varHashTable* varTable){
 
 void createRecTable(recHashTable* recordTable){
     int i;
+    recordTable = (recHashTable*) malloc (sizeof(recHashTable));
     for(i=0;i<RECORDS_SIZE;i++){
         recordTable->array[i]=NULL;
     }
@@ -220,6 +222,7 @@ void removeRecTable(recHashTable* recordTable){
 
 void createFuncTable(funcHashTable* functionTable){
     int i;
+    functionTable = (funcHashTable*) malloc (sizeof(funcHashTable));
     for(i=0;i<FUNCTIONS_SIZE;i++){
         functionTable->array[i]=NULL;
     }

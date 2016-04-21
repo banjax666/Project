@@ -268,7 +268,7 @@ void populateLocalTable(astNode *t, varHashTable *local,recHashTable *recordTabl
 
 }
 
-int compareVarHashTables(varHashTable *t1,varHashTable *t2){
+int compareVarHashTables(varHashTable *t1,varHashTable *t2,int lineNum){
     int i;
     variableTable  *temp1,*temp2;
     for(i=0;i<VARIABLES_SIZE;i++){
@@ -276,7 +276,7 @@ int compareVarHashTables(varHashTable *t1,varHashTable *t2){
         temp2 = t2->array[i];
         while(t1 != NULL && t2 != NULL){
             if(temp1->type != temp2->type){
-                return 0;
+                printf("Line %lu : Type Mismatch between : %s and %s \n",lineNum,;
             }
             temp1 = temp1->next;
             temp2 = temp2->next;
