@@ -96,11 +96,21 @@ int printSymbolTableHelper(parseTree *t,varHashTable *symbolTable,char *currFunc
 
 int childIdToIndex(astNode *parent, int id){
     int i;
+    char ch;
+    printf("Child Node: %s\n",idToName(id));
+    printf("Parent Node: %s\n",idToName(parent->id));
+    printf("parent's children :%d\n",parent->numChildren);
     for(i=0;i<parent->numChildren;++i){
-        if(parent->children[i].id==id)
-            printf("%d\n",i);
+        if(parent->children[i].id==id){
+            printf("position: %d\n",i);
             return i;
+        }
+
     }
+    printf("NOT FOUND!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+    printf("Press ENTER key to Continue\n");
+
+    scanf("%c",&ch);
     return -1;
 }
 
@@ -316,13 +326,15 @@ int functionOrder(funcHashTable *funcs, char *callee, char *caller){
 
 void populateFunctionTable(astNode *t, funcHashTable *functionTable, recHashTable* recordTable){
 
+    printf("Node: %s\n",idToName(t->id));
+
     if(!isTerm(t->id))
     {
         if(t->id == function)
         {
             char* name = (char *)malloc(SIZE_MAX_FUNID*sizeof(char));
             int nameChild;
-            nameChild=childIdToIndex(t,TK_FUNID);
+            nameChild=0;
             strcpy(name,t->children[nameChild].token.lexeme);
             varHashTable* inputList = (varHashTable*)malloc(sizeof(varHashTable));
             varHashTable* outputList = (varHashTable*)malloc(sizeof(varHashTable));
@@ -334,52 +346,52 @@ void populateFunctionTable(astNode *t, funcHashTable *functionTable, recHashTabl
                 semantic_flag = false;
             }
 
-            astNode parameterListNode = t->children[childIdToIndex(t,input_par)].children[childIdToIndex(t,parameter_list)];
+            astNode parameterListNode = t->children[1].children[0];
 
             while(1)
             {
                 int formalParameterType;
 
-                if(parameterListNode.children[childIdToIndex(t,dataType)].children[0].id==primitiveDatatype)
+                if(parameterListNode.children[0].children[0].id==primitiveDatatype)
                 {
-                    formalParameterType = parameterListNode.children[childIdToIndex(t,dataType)].children[childIdToIndex(t,primitiveDatatype)].children[0].id;
-                    addVariable(inputList, parameterListNode.children[childIdToIndex(t,TK_ID)].token.lexeme, formalParameterType);
+                    formalParameterType = parameterListNode.children[0].children[0].children[0].id;
+                    addVariable(inputList, parameterListNode.children[1].token.lexeme, formalParameterType);
 
                 }
                 else
                 {
-                    formalParameterType = findRecType(recordTable, parameterListNode.children[childIdToIndex(t,dataType)].children[childIdToIndex(t,constructedDatatype)].children[childIdToIndex(t,TK_RECORDID)].token.lexeme);
-                    addVariable(inputList, parameterListNode.children[childIdToIndex(t,TK_ID)].token.lexeme, formalParameterType);
+                    formalParameterType = findRecType(recordTable, parameterListNode.children[0].children[0].children[1].token.lexeme);
+                    addVariable(inputList, parameterListNode.children[1].token.lexeme, formalParameterType);
                 }
-                if(parameterListNode.children[childIdToIndex(t,remaining_list)].children[0].id == eps)
+                if(parameterListNode.children[2].children[0].id == eps)
                     break;
-                parameterListNode = parameterListNode.children[childIdToIndex(t,remaining_list)].children[childIdToIndex(t,parameter_list)];
+                parameterListNode = parameterListNode.children[2].children[0];
             }
 
-            astNode outputParameterNode = t->children[childIdToIndex(t,output_par)];
+            astNode outputParameterNode = t->children[2];
             if(outputParameterNode.children[0].id == eps)
                 outputList=NULL;
             else
             {
-                parameterListNode = t->children[childIdToIndex(t,output_par)].children[childIdToIndex(t,parameter_list)];
+                parameterListNode = t->children[2].children[0];
                 while(1)
                 {
                     int formalParameterType;
-                    if(parameterListNode.children[childIdToIndex(t,dataType)].children[0].id==primitiveDatatype)
+                    if(parameterListNode.children[0].children[0].id==primitiveDatatype)
                     {
-                        formalParameterType = parameterListNode.children[childIdToIndex(t,dataType)].children[childIdToIndex(t,primitiveDatatype)].children[0].id;
-                        addVariable(outputList, parameterListNode.children[childIdToIndex(t,TK_ID)].token.lexeme, formalParameterType);
+                        formalParameterType = parameterListNode.children[0].children[0].children[0].id;
+                        addVariable(outputList, parameterListNode.children[1].token.lexeme, formalParameterType);
 
                     }
                     else
                     {
-                        formalParameterType = findRecType(recordTable, parameterListNode.children[childIdToIndex(t,dataType)].children[childIdToIndex(t,constructedDatatype)].children[childIdToIndex(t,TK_RECORDID)].token.lexeme);
-                        addVariable(outputList, parameterListNode.children[childIdToIndex(t,TK_ID)].token.lexeme, formalParameterType);
+                        formalParameterType = findRecType(recordTable, parameterListNode.children[0].children[0].children[1].token.lexeme);
+                        addVariable(outputList, parameterListNode.children[1].token.lexeme, formalParameterType);
                     }
 
-                    if(parameterListNode.children[childIdToIndex(t,remaining_list)].children[0].id == eps)
+                    if(parameterListNode.children[2].children[0].id == eps)
                         break;
-                    parameterListNode = parameterListNode.children[childIdToIndex(t,remaining_list)].children[childIdToIndex(t,parameter_list)];
+                    parameterListNode = parameterListNode.children[2].children[0];
                 }
             }
 
